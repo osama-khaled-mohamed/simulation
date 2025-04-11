@@ -1049,7 +1049,7 @@ if st.session_state.page == "main":
     st.markdown("#### 🏬 Inventory Modules:")    
     col1, col2 = st.columns(2)
     with col1:
-        st.button("📊 Inventory Daily Management", on_click=lambda: go_to(""),disabled=True)
+        st.button("📊 Inventory Daily Management", on_click=lambda: go_to(""),disabled=False)
     with col2:
         st.button("📈 Inventory Cycle Management", on_click=lambda: go_to(""),disabled=True)
     st.markdown("---")
