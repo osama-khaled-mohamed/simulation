@@ -135,11 +135,122 @@ def inputs(program):
                 st.error("Probabilities must be entered equal to Interarrival probability length.⚠️")
                 has_error = True
     
+    elif program == "Inventory_Daily_Management":
+        data_array = np.zeros(17, dtype=object)
+        data_array[0] = st.sidebar.number_input("Number of Days (simulation)", min_value=1, value=10)
+        if data_array[0] < 1:
+            st.error("The number of simulations must be a positive integer.⚠️")
+            has_error = True
+            
+        col1, col2 = st.sidebar.columns(2)
+        with col1:data_array[1] = st.number_input("Min Daily Demand (units)", min_value=1, value=3)
+        with col2:data_array[2] = st.number_input("Max Daily Demand (units)", min_value=1, value=6)
+        if data_array[1] >= data_array[2]:
+            st.error("The daily demand range must be valid (start must be less than end)⚠️.")
+            has_error = True
+
+        col1, col2 = st.sidebar.columns(2)
+        with col1:data_array[3] = st.number_input("Min Lead Time (Days)", min_value=1, value=2)
+        with col2:data_array[4] = st.number_input("Max Lead Time (Days)", min_value=1, value=4)
+        if data_array[3] >= data_array[4]:
+            st.error("The lead time range must be valid (start must be less than end)⚠️.")
+            has_error = True
+
+        EqualProbabilities = st.sidebar.checkbox("Use Equal Probabilities", value=False)
+        data_array[10] = EqualProbabilities
+        if not EqualProbabilities:
+            data_array[8] =  st.sidebar.text_input("Demand Probabilities (space-separated)", "0.15 0.30 0.35 0.20")
+            data_array[9] =  st.sidebar.text_input("Lead Time Probabilities (space-separated)", "0.2 0.6 0.2")
+            prob_Demand = list(map(float,data_array[8].split()))
+            prob_LeadTime = list(map(float,data_array[9].split()))
+            if abs(sum(prob_Demand) - 1) > 0.01:
+                st.error("The sum of Demand probabilities must equal 1.⚠️")
+                has_error = True
+            if abs(sum(prob_LeadTime) - 1) > 0.01:
+                st.error("The sum of Lead Time probabilities must equal 1.⚠️")
+                has_error = True
+            if not prob_Demand or not prob_LeadTime:
+                st.error("Probabilities must be entered when equal probability is disabled.⚠️")
+                has_error = True
+            if len(prob_Demand) != (data_array[2]-data_array[1]+1):
+                st.error("Probabilities must be entered equal to Demand probability length.⚠️")
+                has_error = True
+            if len(prob_LeadTime) !=(data_array[4]-data_array[3]+1):
+                st.error("Probabilities must be entered equal to Lead Time probability length.⚠️")
+                has_error = True
+ 
+        Auto_generate = st.sidebar.checkbox("Auto-generate Random Numbers", value=False)
+        data_array[7] = Auto_generate
+        if not Auto_generate:
+            data_array[5] = st.sidebar.text_input("Demand Random Numbers (space-separated)", "64 33 18 94 78 17 54 09 28 72")
+            data_array[6] = st.sidebar.text_input("Lead time Random Numbers (space-separated)", "5 1 9 4")
+            rand_values_Demand = list(map(int,data_array[5].split()))
+            rand_values_LeadTime = list(map(int,data_array[6].split()))
+            if not rand_values_Demand or not rand_values_LeadTime:
+                st.error("Random numbers must be entered when auto randoms are disabled.")
+                has_error = True
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("### Reorder Point one (RP1)")
+        col1, col2 = st.sidebar.columns(2)
+        with col1:data_array[11] = st.number_input("Min Inventory (unit)", min_value=1, value=10, key="RP1_1")
+        with col2:data_array[12] = st.number_input("Recharge unit Number", min_value=1, value=15 ,key="RP1_2")
+        if data_array[11] < 0:
+            st.error("The Inventory Level must be a positive integer.⚠️")
+            has_error = True
+        if data_array[12] < 0:
+            st.error("The Recharge unit Number must be a positive integer.⚠️")
+            has_error = True
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("### Reorder Point two (RP2)")
+        col1, col2 = st.sidebar.columns(2)
+        with col1:data_array[13] = st.number_input("Min Inventory (unit)", min_value=1, value=5 , key="RP2_1")
+        with col2:data_array[14] = st.number_input("Recharge unit Number", min_value=1, value=15 , key="RP2_2")
+        if data_array[13] < 0:
+            st.error("The Inventory Level must be a positive integer.⚠️")
+            has_error = True
+        if data_array[14] < 0:
+            st.error("The Recharge unit Number must be a positive integer.⚠️")
+            has_error = True
+
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("### Pre-Settings")
+        data_array[15] = st.sidebar.number_input("Initial Inventory Level (unit)", min_value=1, value=10)
+        if data_array[15] < 0:
+            st.error("The Initial Inventory Level must be a positive integer.⚠️")
+            has_error = True
+        Shortage_case = st.sidebar.checkbox("Shortage In Demand Is Lost Forever", value=False)
+        data_array[16] = Shortage_case
+        if Shortage_case:
+            st.sidebar.markdown("**Note:** The shortage in demand : lost forever.")
+        else:
+            st.sidebar.markdown("**Note:** The shortage in demand : backordered.")
     else:
         st.error("Invalid program selected.")
         has_error = True
         data_array = None
     return data_array, has_error
+
+def data_labeled():
+    # Get the input data from session state 00000000000000000000000000000000000
+    days = st.session_state.input_data_array[0]
+    start_range_demand = st.session_state.input_data_array[1]
+    end_range_demand = st.session_state.input_data_array[2]
+    start_range_lead_time = st.session_state.input_data_array[3]
+    end_range_lead_time = st.session_state.input_data_array[4]
+    demand_random_numbers = st.session_state.input_data_array[5]
+    lead_time_random_numbers = st.session_state.input_data_array[6]
+    demand_probabilities = st.session_state.input_data_array[8]
+    lead_time_probabilities = st.session_state.input_data_array[9]
+    eqaul_probabilities = st.session_state.input_data_array[10]
+    auto_random_generate = st.session_state.input_data_array[7]
+    reorder_point_1_limit = st.session_state.input_data_array[11]
+    reorder_point_1_recharge = st.session_state.input_data_array[12]
+    reorder_point_2_limit = st.session_state.input_data_array[13]
+    reorder_point_2_recharge = st.session_state.input_data_array[14]
+    initial_inventory = st.session_state.input_data_array[15]
+    shortage_case = st.session_state.input_data_array[16]
+    
+
 
 def RandomNum(MaxNumRange):
    return int(random.uniform(1, MaxNumRange))
@@ -322,7 +433,63 @@ def ProbabilityTable(program):
                 # Display Inter Arrival Time Table
                 st.subheader("⏱️ Inter Arrival Time Probability ")
                 st.dataframe(df_interarrival)
+            elif program == "Inventory_Daily_Management":
 
+
+                start_range_demand = st.session_state.input_data_array[1]
+                end_range_demand = st.session_state.input_data_array[2]
+
+                start_range_lead_time = st.session_state.input_data_array[3]
+                end_range_lead_time = st.session_state.input_data_array[4]
+                
+                demand_probabilities = st.session_state.input_data_array[8]
+                lead_time_probabilities = st.session_state.input_data_array[9]
+                
+                eqaul_probabilities = st.session_state.input_data_array[10]
+
+                headers_demand = ["Demand", "Probability", "Cumulative", "Start Range", "End Range"]
+                headers_leadtime = ["Lead Time", "Probability", "Cumulative", "Start Range", "End Range"]
+                
+                if not eqaul_probabilities:
+                    ProbValuesDemandTime = GetProbabilities(demand_probabilities)
+                    ProbValuesLeadTime = GetProbabilities(lead_time_probabilities)
+                else: 
+                    ProbValuesDemandTime = ProbValuesLeadTime = None
+
+                ProbArryDemandTime = CalculateProbability(start_range_demand, end_range_demand, eqaul_probabilities, ProbValuesDemandTime)
+                ProbArryLeadTime = CalculateProbability(start_range_lead_time, end_range_lead_time, eqaul_probabilities, ProbValuesLeadTime)
+                for i in range( end_range_lead_time - start_range_lead_time  + 1):
+                    ProbArryLeadTime[i, 3] = ProbArryLeadTime[i, 3]/ 10
+                    ProbArryLeadTime[i, 4] = ProbArryLeadTime[i, 4]/ 10
+
+                # Convert to DataFrames
+                df_demand = pd.DataFrame(ProbArryDemandTime, columns=headers_demand)
+                df_leadtime = pd.DataFrame(ProbArryLeadTime, columns=headers_leadtime)
+
+                # Format demand DataFrame
+                df_demand["Demand"] = df_demand["Demand"].astype(int)
+                df_demand["Start Range"] = df_demand["Start Range"].astype(int)
+                df_demand["End Range"] = df_demand["End Range"].astype(int)
+                df_demand["Probability"] = df_demand["Probability"].map("{:.2f}".format)
+                df_demand["Cumulative"] = df_demand["Cumulative"].map("{:.2f}".format)
+
+                # Format lead time DataFrame
+                df_leadtime["Lead Time"] = df_leadtime["Lead Time"].astype(int)
+                df_leadtime["Start Range"] = df_leadtime["Start Range"].astype(int)
+                df_leadtime["End Range"] = df_leadtime["End Range"].astype(int)
+                df_leadtime["Probability"] = df_leadtime["Probability"].map("{:.2f}".format)
+                df_leadtime["Cumulative"] = df_leadtime["Cumulative"].map("{:.2f}".format)
+
+                # Display Demand Table
+                st.subheader("📦 Daily Demand Probability Array")
+                st.dataframe(df_demand)
+                st.markdown("-----")
+
+
+                # Display Lead Time Table
+                st.subheader("⏲️ Lead Time Probability Array")
+                st.dataframe(df_leadtime)
+            
             else:
                 st.error("Invalid program selected.")                
         except Exception as e:
@@ -552,6 +719,196 @@ def TableData(program):
             st.session_state.TotalWhosWaitInQueue = TotalWhosWaitInQueue
             st.session_state.program_type = "Double_server"
             return TableArry, TotalWhosWaitInQueue,"Double_server"
+        elif program == "Inventory_Daily_Management":
+
+            days = st.session_state.input_data_array[0]
+            start_range_demand = st.session_state.input_data_array[1]
+            end_range_demand = st.session_state.input_data_array[2]
+            start_range_lead_time = st.session_state.input_data_array[3]
+            end_range_lead_time = st.session_state.input_data_array[4]
+            demand_random_numbers = st.session_state.input_data_array[5]
+            lead_time_random_numbers = st.session_state.input_data_array[6]
+            demand_probabilities = st.session_state.input_data_array[8]
+            lead_time_probabilities = st.session_state.input_data_array[9]
+            eqaul_probabilities = st.session_state.input_data_array[10]
+            auto_random_generate = st.session_state.input_data_array[7]
+            reorder_point_1_limit = st.session_state.input_data_array[11]
+            reorder_point_1_recharge = st.session_state.input_data_array[12]
+            reorder_point_2_limit = st.session_state.input_data_array[13]
+            reorder_point_2_recharge = st.session_state.input_data_array[14]
+            initial_inventory = st.session_state.input_data_array[15]
+            shortage_case = st.session_state.input_data_array[16]
+
+            TableArry = np.zeros((days, 14), dtype=int)
+
+            Cumulative_demand = 0 
+            Cumulative_stock = 0
+            cumulative_shortage = 0
+            backup = 0 
+            temp = 0             
+            Pickup_lead_time = []
+
+            if not eqaul_probabilities:
+                ProbValuesDemandTime = GetProbabilities(demand_probabilities)
+                ProbValuesLeadTimeTime = GetProbabilities(lead_time_probabilities)
+            else: 
+                ProbValuesDemandTime = ProbValuesLeadTimeTime = None
+
+            
+            ProbArryLeadTimeTime = CalculateProbability(start_range_lead_time, end_range_lead_time, eqaul_probabilities, ProbValuesLeadTimeTime)
+            for i in range( end_range_lead_time - start_range_lead_time  + 1):
+                ProbArryLeadTimeTime[i, 3] = ProbArryLeadTimeTime[i, 3]/ 10
+                ProbArryLeadTimeTime[i, 4] = ProbArryLeadTimeTime[i, 4]/ 10
+            
+            if not auto_random_generate:
+                RandValuesDemandTime = GetRandomNumbers(demand_random_numbers)
+                RandValuesLeadTimeTime = GetRandomNumbers(lead_time_random_numbers)
+            else:
+                RandValuesDemandTime = RandValuesLeadTimeTime = None
+
+            if not auto_random_generate:
+                range_length = end_range_lead_time - start_range_lead_time + 1
+                for x in range(len(RandValuesLeadTimeTime)):
+                    for i in range(len(RandValuesLeadTimeTime)):
+                        idx = i % range_length  
+                        if (ProbArryLeadTimeTime[idx, 4] >= RandValuesLeadTimeTime[x]) and (ProbArryLeadTimeTime[idx, 3] <= RandValuesLeadTimeTime[x]):
+                            Pickup_lead_time.append(ProbArryLeadTimeTime[idx, 0]) 
+                            break
+            else:
+                for x in range(days):
+                    for i in range(days):
+                        idx = i % len(ProbArryLeadTimeTime) 
+                        xl = RandomNum(9)
+                        if (ProbArryLeadTimeTime[idx, 4] >= xl) and (ProbArryLeadTimeTime[idx, 3] <= xl):
+                            Pickup_lead_time.append(ProbArryLeadTimeTime[idx, 0]) 
+                            break
+
+                
+                    
+
+               
+
+
+            for i in range(days):
+
+                TableArry[i,0] = i + 1 # Day
+
+                if TableArry[i,0] == 1:
+                    TableArry[i,1] = initial_inventory
+                else:
+
+                    if not shortage_case:                                                                  #
+                        if TableArry[i,0] == TableArry[i-1,4] and TableArry[i,0] == TableArry[i-1,6]  :
+                            TableArry[i,1] = reorder_point_1_recharge + reorder_point_2_recharge + backup   
+                        elif TableArry[i,0] == TableArry[i-1,4]  :
+                            TableArry[i,1] =  reorder_point_1_recharge  + backup 
+                        elif TableArry[i,0] == TableArry[i-1,6]  :
+                            TableArry[i,1] =  reorder_point_2_recharge + backup
+                        else :
+                            if TableArry[i-1,1] >= TableArry[i-1,8] :
+                                TableArry[i,1] = TableArry[i-1,1] - TableArry[i-1,8] 
+                            else :
+                                TableArry[i,1] = 0
+
+                    else:
+                        if TableArry[i,0] == TableArry[i-1,4] and TableArry[i,0] == TableArry[i-1,6] :
+                            TableArry[i,1] = reorder_point_1_recharge + reorder_point_2_recharge  + TableArry[i-1,1]-  TableArry[i-1,8] if TableArry[i-1,10] == 0 else reorder_point_2_recharge + reorder_point_1_recharge
+                        elif TableArry[i,0] == TableArry[i-1,4]  :
+                            TableArry[i,1] = reorder_point_1_recharge + TableArry[i-1,1] -  TableArry[i-1,8]  if TableArry[i-1,10] == 0 else reorder_point_1_recharge
+                        elif TableArry[i,0] == TableArry[i-1,6]  :
+                            TableArry[i,1] = reorder_point_2_recharge + TableArry[i-1,1] -  TableArry[i-1,8] if TableArry[i-1,10] == 0 else reorder_point_2_recharge
+                        else :
+                            TableArry[i,1] = TableArry[i-1,1] - TableArry[i-1,8] if TableArry[i-1,1] >= TableArry[i-1,8] else 0
+
+
+
+
+                Cumulative_stock += TableArry[i,1] 
+                TableArry[i,2] = Cumulative_stock # Cumulative stock
+
+                if auto_random_generate:
+                    TableArry[i,7] = RandomNum(99)
+                    TableArry[i,8] = CalRandomTime(TableArry[i,7],start_range_demand,end_range_demand,eqaul_probabilities,ProbValuesDemandTime)
+                else:
+                    TableArry[i,7] = RandValuesDemandTime[i] if i < len(RandValuesDemandTime) else RandValuesDemandTime[i % len(RandValuesDemandTime)]
+                    TableArry[i,8] = CalRandomTime(TableArry[i,7],start_range_demand,end_range_demand,eqaul_probabilities,ProbValuesDemandTime)
+
+                Cumulative_demand += TableArry[i,8] 
+                TableArry[i,9] = Cumulative_demand # Cumulative demand  
+
+                if TableArry[i,1] <= reorder_point_1_limit:
+                    TableArry[i,3] = reorder_point_1_recharge 
+                else:
+                    TableArry[i,3]=0
+                if  TableArry[i-1,4] > TableArry[i,0] :
+                    TableArry[i,3] = reorder_point_1_recharge
+
+                if TableArry[i,3] != 0:
+
+                    if TableArry[i,0] != 1 and TableArry[i-1,4] != 0 and TableArry[i-1,4] > TableArry[i,0] :
+                        TableArry[i,4] = TableArry[i-1,4] 
+                        TableArry[i,12] = TableArry[i-1,12]
+                    else:
+                        if temp < len(Pickup_lead_time):
+                            TableArry[i,4] = TableArry[i,0] + Pickup_lead_time[temp]   
+                            TableArry[i,12] = Pickup_lead_time[temp]     
+                            temp += 1  
+                        else:
+                            temp = temp % len(Pickup_lead_time)
+                            TableArry[i,4] = TableArry[i,0] + Pickup_lead_time[temp]
+                            TableArry[i,12] = Pickup_lead_time[temp]
+                            temp += 1
+                else:
+                    TableArry[i,4] = 0
+
+
+                if TableArry[i,1] <= reorder_point_2_limit :
+                    TableArry[i,5] = reorder_point_2_recharge
+                else:
+                    TableArry[i,5] = 0   
+                if  TableArry[i-1,6] > TableArry[i,0] :
+                    TableArry[i,5] = reorder_point_2_recharge
+ 
+                if TableArry[i,5] != 0:
+
+                    if TableArry[i,0] != 1 and TableArry[i-1,6] != 0 and TableArry[i-1,6] > TableArry[i,0] :
+                        TableArry[i,6] = TableArry[i-1,6] 
+                        TableArry[i,13] = TableArry[i-1,13]
+                    else:
+                        if temp < len(Pickup_lead_time):
+                            TableArry[i,6] = TableArry[i,0] + Pickup_lead_time[temp]
+                            TableArry[i,13] = Pickup_lead_time[temp]                            
+                            temp += 1  
+                        else:
+                            temp = temp % len(Pickup_lead_time)
+                            TableArry[i,6] = TableArry[i,0] + Pickup_lead_time[temp]
+                            TableArry[i,13] = Pickup_lead_time[temp]
+                            temp += 1
+                else:
+                    TableArry[i,6] = 0  
+
+                if TableArry[i,1] < TableArry[i,8]:
+                    backup += (TableArry[i,1] - TableArry[i,8])
+                else:
+                    backup = 0
+                TableArry[i,10] = backup # Shortage 
+
+
+                if TableArry[i,1] < TableArry[i,8]:
+                    TableArry[i,10] =abs(TableArry[i,1] - TableArry[i,8])
+                cumulative_shortage += TableArry[i,10]
+                TableArry[i,11] = cumulative_shortage # Cumulative shortage
+
+
+
+
+            TotalWhosWaitInQueue = 0#np.count_nonzero(TableArry[:days, 7])
+            st.session_state.output_data_Table = TableArry
+            st.session_state.TotalWhosWaitInQueue = TotalWhosWaitInQueue
+            st.session_state.program_type = "Inventory_Daily_Management"
+            return TableArry, TotalWhosWaitInQueue,"Inventory_Daily_Management"
+        else:
+            st.error("Invalid program selected.")
     except Exception as e:
         st.error(f"An error occurred while generating table data: {e}")
 
@@ -562,7 +919,7 @@ def TablePrinter():
             if st.session_state.program_type == "single_server":    
                 TableArry = st.session_state.output_data_Table
                 SimulateNumber = st.session_state.input_data_array[0]
-                index = min(SimulateNumber, TableArry.shape[0] - 1)
+
 
                 df_table = pd.DataFrame(TableArry[:-1], columns=["NO", "RAT", "IAT", "AT", "RST", "ST", "STB", "QU", "STE", "TS", "IDLE"])
                 total_row = {
@@ -589,7 +946,7 @@ def TablePrinter():
 
                 TableArry = st.session_state.output_data_Table
                 SimulateNumber = st.session_state.input_data_array[0]
-                index = min(SimulateNumber, TableArry.shape[0] - 1)
+
 
                 df_table = pd.DataFrame(TableArry[1:-1], columns= ["NO", "RAT", "IAT", "AT", "RST", "STx", "STy", "STXB", "STX", "STXE", "STYB", "STY", "STYE", "QU", "TS", "IDLEX", "IDLEY"])
                 total_row = {
@@ -619,12 +976,44 @@ def TablePrinter():
 
                 st.markdown("### 📑TOTAL DATA:")
                 st.dataframe(df_total, use_container_width=True)                
+            elif st.session_state.program_type == "Inventory_Daily_Management":
+                table_data = st.session_state.output_data_Table
+                days = st.session_state.input_data_array[0]
+                
+                df_table = pd.DataFrame(table_data, columns=["Day", "Stk", "CStk", "Ord1", "Due1", "Ord2", "Due2","R-dmd", "Dmd", "C-dmd", "Short", "CShort","LT 1","LT 2"])
+                                                      #columns=[" 0 ", " 1 ", " 2  ",  " 3 ", "  4 ", " 5  ", "  6 ","  7  ", " 8 ", "  9  ", " 1 0 ", "  11 "," 12 "," 13 "])
+                total_row = {
+                    "Day": days,
+                    "Stk": "",
+                    "CStk": table_data[days-1, 2],
+                    "Ord1": "",
+                    "Due1": "",
+                    "Ord2": "",
+                    "Due2": "",
+                    "R-dmd":"",
+                    "Dmd": "",
+                    "C-dmd": table_data[days-1, 9],
+                    "Short": "",
+                    "CShort": table_data[days-1, 11],
+                    "LT 1": "",
+                    "LT 2": ""
+                }
+                df_total = pd.DataFrame([total_row])
+                st.markdown("### 🗃️ TABLE DATA:")
+                st.dataframe(df_table, use_container_width=True)
+                st.markdown("-----")
+                st.markdown("### 📑TOTAL DATA:")
+                st.dataframe(df_total, use_container_width=True)
+
+
+            else:
+                st.error("Invalid program selected.")
         except Exception as e:
             st.error(f"An error occurred while printing the table: {e}")
 
 def Statistics(program):
     try:
-
+        st.subheader("📄 Data Report")
         if program_type == "single_server":
             SumSimulate = st.session_state.input_data_array[0]
             TableArry = st.session_state.output_data_Table
@@ -692,6 +1081,29 @@ def Statistics(program):
             }
             df = pd.DataFrame(data, columns=["Statistic", "Value"])
             st.dataframe(df)
+        elif program_type == "Inventory_Daily_Management":
+            days = st.session_state.input_data_array[0]
+            TableArry = st.session_state.output_data_Table
+            SumStock = TableArry[days-1, 2]
+            SumDemand = TableArry[days-1, 9]
+            SumShortage = TableArry[days-1, 11]
+            data = {
+                "Statistic": [
+                    "Average Stock (Units)",
+                    "Average Demand (Units)",
+                    "Average Shortage (Units)",
+                    "Service Level (%)"
+                ],
+                "Value": [
+                    round( SumStock / days,2) if days != 0 else 0.00,
+                    round( SumDemand / days,2) if days != 0 else 0.00,
+                    round( SumShortage / days,2) if days != 0 else 0.00,
+                    round( (SumDemand - SumShortage) / SumDemand * 100 ,2)if SumDemand != 0 else 0.00
+                ]
+            }
+            df = pd.DataFrame(data, columns=["Statistic", "Value"])
+            st.dataframe(df)
+
     except Exception as e:
         st.error(f"An error occurred while calculating statistics: {e}")
 
@@ -901,8 +1313,39 @@ def Graphics(program):
             ax3.set_title("Server Utilization")
             st.pyplot(fig7)
 
-            ### Chart 4: Summary Numbers
+        except Exception as e:
+            st.error(f"An error occurred while generating graphics: {e}")
+    elif program_type == "Inventory_Daily_Management":
+        try:
+            st.subheader("📊 Inventory Daily Management Analysis")
+            TableArry = st.session_state.output_data_Table
+            days = st.session_state.input_data_array[0]
+            cumulative_stock = TableArry[:days, 2]
+            cumulative_demand = TableArry[:days, 9]
+            cumulative_shortage = TableArry[:days, 11]
+            col1 , col2 = st.columns(2)
+            col1.metric("Total Stock", cumulative_stock[-1])
+            col2.metric("Total Demand", cumulative_demand[-1])
+            col3 , col4 = st.columns(2)
+            col3.metric("Total Shortage", cumulative_shortage[-1])
+            col4.metric("Total Days", days)
+            col5 , col6 = st.columns(2)
+            col5.metric("Average Stock", cumulative_stock.mean())
+            col6.metric("Average Demand", cumulative_demand.mean())
+            col7 , col8 = st.columns(2)
+            col7.metric("Average Shortage", cumulative_shortage.mean())
+            col8.metric("Real payment",  cumulative_demand[-1] - cumulative_shortage[-1])
 
+            fig8, ax8 = plt.subplots()
+            ax8.plot(cumulative_stock, label="Stock", marker='o', color='blue')
+            ax8.plot(cumulative_demand, label="Demand", marker='x', color='orange')
+            ax8.plot(cumulative_shortage, label="Shortage", marker='x', color='red')
+            ax8.set_title("Stock vs. Demand vs. Shortage")
+            ax8.set_xlabel("Days")
+            ax8.set_ylabel("Units")
+            ax8.legend()
+            ax8.grid(True, linestyle="-", alpha=0.9)
+            st.pyplot(fig8)
         except Exception as e:
             st.error(f"An error occurred while generating graphics: {e}")
     else:
@@ -1017,6 +1460,53 @@ def DownloadData(program):
                 file_name="simulation_data.csv",
                 mime="text/csv"
             )
+        elif program == "Inventory_Daily_Management":
+            st.subheader("⬇️ Download All Simulation Data")
+            TableArry = st.session_state.output_data_Table
+            df_simulation = pd.DataFrame(TableArry, columns=["Day", "Stk", "CStk", "Ord1", "Due1", "Ord2", "Due2","R-dmd", "Dmd", "C-dmd", "Short", "CShort","LT 1","LT 2"])
+            
+            # Calculate additional statistics if needed
+            days = st.session_state.input_data_array[0]
+            SumStock = TableArry[days-1, 2]
+            SumDemand = TableArry[days-1, 9]
+            SumShortage = TableArry[days-1, 11]
+
+            df_statistics = pd.DataFrame({
+                "Statistic": [
+                    "Total Days",
+                    "Total Stock",
+                    "Total Demand",
+                    "Total Shortage",
+                    "Average Stock",
+                    "Average Demand",
+                    "Average Shortage",
+                    "Service Level (%)"
+                ],
+                "Value": [
+                    days,
+                    SumStock,
+                    SumDemand,
+                    SumShortage,
+                    SumStock / days if days != 0 else 0.00,
+                    SumDemand / days if days != 0 else 0.00,
+                    SumShortage / days if days != 0 else 0.00,
+                    (SumDemand - SumShortage) / SumDemand * 100 if SumDemand != 0 else 0.00
+                ]
+            })
+            
+            # Combine both DataFrames for downloading
+            df_combined = pd.concat([df_simulation, df_statistics], ignore_index=True)
+            
+            # Convert to CSV format
+            csv = df_combined.to_csv(index=False).encode('utf-8')
+            # Create a download button
+            st.download_button(
+                label="Download Data as CSV",
+                data=csv,
+                file_name="simulation_data.csv",
+                mime="text/csv"
+            )
+
         else:
             st.error("Invalid program type for download data generation. Please check the program type.")
     except Exception as e:
@@ -1049,7 +1539,7 @@ if st.session_state.page == "main":
     st.markdown("#### 🏬 Inventory Modules:")    
     col1, col2 = st.columns(2)
     with col1:
-        st.button("📊 Inventory Daily Management", on_click=lambda: go_to(""),disabled=False)
+        st.button("📊 Inventory Daily Management", on_click=lambda: go_to("Inventory_Daily_Management"))
     with col2:
         st.button("📈 Inventory Cycle Management", on_click=lambda: go_to(""),disabled=True)
     st.markdown("---")
@@ -1086,19 +1576,14 @@ elif st.session_state.page == "Single_Server":
     if simulate_btn:
         tab1, tab2, tab3, tab4, tab5 = st.tabs(["💡 Probabilities", "📈 Analysis", "📄 Data Report", "📊 Graphics", "⬇️ Download"])
         with tab1:
-            if simulate_btn:
-                ProbabilityTable("Single_Server")
+            ProbabilityTable("Single_Server")
         with tab2:
-            if simulate_btn:
-                table_data,TotalWhosWaitInQueue,program_type = TableData("Single_Server")
-                TablePrinter()
+            table_data,TotalWhosWaitInQueue,program_type = TableData("Single_Server")
+            TablePrinter()
         with tab3:
-            st.subheader("📄 Data Report")
-            if simulate_btn:
-                Statistics("single_server")
+            Statistics("single_server")
         with tab4:
-            if simulate_btn:
-                Graphics("single_server")      
+            Graphics("single_server")      
         with tab5:
             DownloadData("single_server")
 
@@ -1115,21 +1600,47 @@ elif st.session_state.page == "Double_Server":
     if simulate_btn:
         tab1, tab2, tab3, tab4, tab5 = st.tabs(["💡 Probabilities", "📈 Analysis", "📄 Data Report", "📊 Graphics", "⬇️ Download"])
         with tab1:
-            if simulate_btn:
-                ProbabilityTable("Double_Server")   
+            ProbabilityTable("Double_Server")   
         with tab2:
-            if simulate_btn:
-                table_data, TotalWhosWaitInQueue ,program_type  = TableData("Double_Server")
-                TablePrinter()
+            table_data, TotalWhosWaitInQueue ,program_type  = TableData("Double_Server")
+            TablePrinter()
         with tab3:
-            st.subheader("📄 Data Report")
-            if simulate_btn:
-                Statistics("Double_server")
+            Statistics("Double_server")
         with tab4:
-            if simulate_btn:
-                Graphics("Double_server")
+            Graphics("Double_server")
         with tab5:
             DownloadData("Double_server")
+
+
+elif st.session_state.page == "Inventory_Daily_Management":
+    visibility = True
+    st.title("📤 Inventory Daily Management")
+    st.markdown(
+        """
+        **Manage and simulate inventory flow on a daily basis to monitor stock levels, optimize reordering,
+        and evaluate overall system efficiency.**
+
+        This module helps in modeling daily inventory scenarios using simulation, helping you make data-driven decisions 
+        for supply chain and stock management.
+        """ )    
+    st.sidebar.title("Settings")
+    data_array, has_error = inputs("Inventory_Daily_Management")
+    st.session_state.input_data_array = data_array
+    simulate_btn = st.sidebar.button("Run Simulation 📊", on_click=lambda:(simulate_btn==True), disabled=has_error)
+    st.sidebar.button("🔙 Back" ,on_click=lambda:go_to("main"))
+    if simulate_btn:
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(["💡 Probabilities", "📈 Analysis", "📄 Data Report", "📊 Graphics", "⬇️ Download"])
+        with tab1:
+            ProbabilityTable("Inventory_Daily_Management")   
+        with tab2:
+            table_data, TotalWhosWaitInQueue ,program_type  = TableData("Inventory_Daily_Management")
+            TablePrinter()
+        with tab3:
+            Statistics("Inventory_Daily_Management")
+        with tab4:
+            Graphics("Inventory_Daily_Management")
+        with tab5:
+            DownloadData("Inventory_Daily_Management")
 
 
 st.markdown(
