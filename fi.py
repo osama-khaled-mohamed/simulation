@@ -224,32 +224,137 @@ def inputs(program):
             st.sidebar.markdown("**Note:** The shortage in demand : lost forever.")
         else:
             st.sidebar.markdown("**Note:** The shortage in demand : backordered.")
+    
+    elif program == "Inventory_Cycle_Management":
+        data_array = np.zeros(17, dtype=object)
+        data_array[0] = st.sidebar.number_input("Number of Cycles (simulation)", min_value=1, value=5)
+        if data_array[0] < 1:
+            st.error("The number of simulations must be a positive integer.⚠️")
+            has_error = True
+            
+        col1, col2 = st.sidebar.columns(2)
+        with col1:data_array[1] = st.number_input("Min Daily Demand (units)", min_value=0, value=0)
+        with col2:data_array[2] = st.number_input("Max Daily Demand (units)", min_value=0, value=4)
+        if data_array[1] >= data_array[2]:
+            st.error("The daily demand range must be valid (start must be less than end)⚠️.")
+            has_error = True
+
+        col1, col2 = st.sidebar.columns(2)
+        with col1:data_array[3] = st.number_input("Min Lead Time (Days)", min_value=0, value=1)
+        with col2:data_array[4] = st.number_input("Max Lead Time (Days)", min_value=0, value=3)
+        if data_array[3] >= data_array[4]:
+            st.error("The lead time range must be valid (start must be less than end)⚠️.")
+            has_error = True
+
+        EqualProbabilities = st.sidebar.checkbox("Use Equal Probabilities", value=False)
+        data_array[10] = EqualProbabilities
+        if not EqualProbabilities:
+            data_array[8] =  st.sidebar.text_input("Demand Probabilities (space-separated)", "0.10 0.25 0.35 0.21 0.09")
+            data_array[9] =  st.sidebar.text_input("Lead Time Probabilities (space-separated)", "0.6 0.3 0.1")
+            prob_Demand = list(map(float,data_array[8].split()))
+            prob_LeadTime = list(map(float,data_array[9].split()))
+            if abs(sum(prob_Demand) - 1) > 0.01:
+                st.error("The sum of Demand probabilities must equal 1.⚠️")
+                has_error = True
+            if abs(sum(prob_LeadTime) - 1) > 0.01:
+                st.error("The sum of Lead Time probabilities must equal 1.⚠️")
+                has_error = True
+            if not prob_Demand or not prob_LeadTime:
+                st.error("Probabilities must be entered when equal probability is disabled.⚠️")
+                has_error = True
+            if len(prob_Demand) != (data_array[2]-data_array[1]+1):
+                st.error("Probabilities must be entered equal to Demand probability length.⚠️")
+                has_error = True
+            if len(prob_LeadTime) !=(data_array[4]-data_array[3]+1):
+                st.error("Probabilities must be entered equal to Lead Time probability length.⚠️")
+                has_error = True
+ 
+        Auto_generate = st.sidebar.checkbox("Auto-generate Random Numbers", value=False)
+        data_array[7] = Auto_generate
+        if not Auto_generate:
+            data_array[5] = st.sidebar.text_input("Demand Random Numbers (space-separated)", "24 35 65 81 54 03 87 27 73 70 47 45 48 17 09 42 87 26 36 40 07 63 19 88 94")
+            data_array[6] = st.sidebar.text_input("Lead time Random Numbers (space-separated)", "5 0 3 4 8")
+            rand_values_Demand = list(map(int,data_array[5].split()))
+            rand_values_LeadTime = list(map(int,data_array[6].split()))
+            if not rand_values_Demand or not rand_values_LeadTime:
+                st.error("Random numbers must be entered when auto randoms are disabled.")
+                has_error = True
+        st.sidebar.markdown("---")
+        
+        st.sidebar.markdown("### Inventory Data ")
+        data_array[11] = st.sidebar.number_input("Stander Inventory Level M (unit)", min_value=1, value=11)
+        data_array[12] = st.sidebar.number_input("Periodic length N (day)", min_value=1, value=5)
+        if data_array[11] < 0:
+            st.error("The Stander Level must be a positive integer.⚠️")
+            has_error = True
+        if data_array[12] < 0:
+            st.error("The Periodic unit Number must be a positive integer.⚠️")
+            has_error = True
+
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("### Initial Settings")
+        data_array[13] = st.sidebar.number_input("Previous Reordering (unit)", min_value=1, value=8 )
+        data_array[14] = st.sidebar.number_input("After (days)", min_value=1, value=2 )
+        if data_array[13] < 0:
+            st.error("The Inventory Level must be a positive integer.⚠️")
+            has_error = True
+        if data_array[14] < 0:
+            st.error("The Recharge unit Number must be a positive integer.⚠️")
+            has_error = True
+
+        data_array[15] = st.sidebar.number_input("Starting quantity (unit)", min_value=1, value=3)
+        if data_array[15] < 0:
+            st.error("The start Inventory Level must be a positive integer.⚠️")
+            has_error = True
+        Shortage_case = st.sidebar.checkbox("Shortage In Demand Is Resumed", value=True)
+        data_array[16] = Shortage_case
+        if not Shortage_case:
+            st.sidebar.markdown("**Note:** The shortage in demand : lost forever.")
+        else:
+            st.sidebar.markdown("**Note:** The shortage in demand : backordered.")        
     else:
         st.error("Invalid program selected.")
         has_error = True
         data_array = None
     return data_array, has_error
 
-def data_labeled():
-    # Get the input data from session state 00000000000000000000000000000000000
-    days = st.session_state.input_data_array[0]
-    start_range_demand = st.session_state.input_data_array[1]
-    end_range_demand = st.session_state.input_data_array[2]
-    start_range_lead_time = st.session_state.input_data_array[3]
-    end_range_lead_time = st.session_state.input_data_array[4]
-    demand_random_numbers = st.session_state.input_data_array[5]
-    lead_time_random_numbers = st.session_state.input_data_array[6]
-    demand_probabilities = st.session_state.input_data_array[8]
-    lead_time_probabilities = st.session_state.input_data_array[9]
-    eqaul_probabilities = st.session_state.input_data_array[10]
-    auto_random_generate = st.session_state.input_data_array[7]
-    reorder_point_1_limit = st.session_state.input_data_array[11]
-    reorder_point_1_recharge = st.session_state.input_data_array[12]
-    reorder_point_2_limit = st.session_state.input_data_array[13]
-    reorder_point_2_recharge = st.session_state.input_data_array[14]
-    initial_inventory = st.session_state.input_data_array[15]
-    shortage_case = st.session_state.input_data_array[16]
-    
+# def data_labeled():
+#     if program == "Inventory_Daily_Management":
+#         days = st.session_state.input_data_array[0]
+#         start_range_demand = st.session_state.input_data_array[1]
+#         end_range_demand = st.session_state.input_data_array[2]
+#         start_range_lead_time = st.session_state.input_data_array[3]
+#         end_range_lead_time = st.session_state.input_data_array[4]
+#         demand_random_numbers = st.session_state.input_data_array[5]
+#         lead_time_random_numbers = st.session_state.input_data_array[6]
+#         demand_probabilities = st.session_state.input_data_array[8]
+#         lead_time_probabilities = st.session_state.input_data_array[9]
+#         eqaul_probabilities = st.session_state.input_data_array[10]
+#         auto_random_generate = st.session_state.input_data_array[7]
+#         reorder_point_1_limit = st.session_state.input_data_array[11]
+#         reorder_point_1_recharge = st.session_state.input_data_array[12]
+#         reorder_point_2_limit = st.session_state.input_data_array[13]
+#         reorder_point_2_recharge = st.session_state.input_data_array[14]
+#         initial_inventory = st.session_state.input_data_array[15]
+#         shortage_case = st.session_state.input_data_array[16]
+#     elif program =="Inventory_Cycle_Management":
+#         cycle_simulation = st.session_state.input_data_array[0]
+#         start_range_demand = st.session_state.input_data_array[1]
+#         end_range_demand = st.session_state.input_data_array[2]
+#         start_range_lead_time = st.session_state.input_data_array[3]
+#         end_range_lead_time = st.session_state.input_data_array[4]
+#         demand_random_numbers = st.session_state.input_data_array[5]
+#         lead_time_random_numbers = st.session_state.input_data_array[6]
+#         demand_probabilities = st.session_state.input_data_array[8]
+#         lead_time_probabilities = st.session_state.input_data_array[9]
+#         eqaul_probabilities = st.session_state.input_data_array[10]
+#         auto_random_generate = st.session_state.input_data_array[7]
+#         standard_inventory_level_m = st.session_state.input_data_array[11]
+#         periodic_length_n = st.session_state.input_data_array[12]
+#         previous_reordering = st.session_state.input_data_array[13]
+#         after_days = st.session_state.input_data_array[14]
+#         starting_quantity = st.session_state.input_data_array[15]
+#         shortage_case = st.session_state.input_data_array[16]
 
 
 def RandomNum(MaxNumRange):
@@ -459,8 +564,8 @@ def ProbabilityTable(program):
                 ProbArryDemandTime = CalculateProbability(start_range_demand, end_range_demand, eqaul_probabilities, ProbValuesDemandTime)
                 ProbArryLeadTime = CalculateProbability(start_range_lead_time, end_range_lead_time, eqaul_probabilities, ProbValuesLeadTime)
                 for i in range( end_range_lead_time - start_range_lead_time  + 1):
-                    ProbArryLeadTime[i, 3] = ProbArryLeadTime[i, 3]/ 10
-                    ProbArryLeadTime[i, 4] = ProbArryLeadTime[i, 4]/ 10
+                    ProbArryLeadTime[i, 3] = int(ProbArryLeadTime[i, 3]/ 10)
+                    ProbArryLeadTime[i, 4] = int(ProbArryLeadTime[i, 4]/ 10)
 
                 # Convert to DataFrames
                 df_demand = pd.DataFrame(ProbArryDemandTime, columns=headers_demand)
@@ -489,7 +594,53 @@ def ProbabilityTable(program):
                 # Display Lead Time Table
                 st.subheader("⏲️ Lead Time Probability Array")
                 st.dataframe(df_leadtime)
-            
+            elif program == "Inventory_Cycle_Management":
+                start_range_demand = st.session_state.input_data_array[1]
+                end_range_demand = st.session_state.input_data_array[2]
+
+                start_range_lead_time = st.session_state.input_data_array[3]
+                end_range_lead_time = st.session_state.input_data_array[4]
+                
+                demand_probabilities = st.session_state.input_data_array[8]
+                lead_time_probabilities = st.session_state.input_data_array[9]
+                
+                eqaul_probabilities = st.session_state.input_data_array[10]
+
+                headers_demand = ["Demand", "Probability", "Cumulative", "Start Range", "End Range"]
+                headers_leadtime = ["Lead Time", "Probability", "Cumulative", "Start Range", "End Range"]
+                
+                if not eqaul_probabilities:
+                    ProbValuesDemandTime = GetProbabilities(demand_probabilities)
+                    ProbValuesLeadTime = GetProbabilities(lead_time_probabilities)
+                else: 
+                    ProbValuesDemandTime = ProbValuesLeadTime = None
+
+                ProbArryDemandTime = CalculateProbability(start_range_demand, end_range_demand, eqaul_probabilities, ProbValuesDemandTime)
+                ProbArryLeadTime = CalculateProbability(start_range_lead_time, end_range_lead_time, eqaul_probabilities, ProbValuesLeadTime)
+                for i in range( end_range_lead_time - start_range_lead_time  + 1):
+                    ProbArryLeadTime[i, 3] = int(ProbArryLeadTime[i, 3]/ 10)
+                    ProbArryLeadTime[i, 4] = int(ProbArryLeadTime[i, 4]/ 10)
+
+                # Convert to DataFrames
+                df_demand = pd.DataFrame(ProbArryDemandTime, columns=headers_demand)
+                df_leadtime = pd.DataFrame(ProbArryLeadTime, columns=headers_leadtime)
+
+                # Format demand DataFrame
+                df_demand["Demand"] = df_demand["Demand"].astype(int)
+                df_demand["Start Range"] = df_demand["Start Range"].astype(int)
+                df_demand["End Range"] = df_demand["End Range"].astype(int)
+                df_demand["Probability"] = df_demand["Probability"].map("{:.2f}".format)
+                df_demand["Cumulative"] = df_demand["Cumulative"].map("{:.2f}".format)
+        
+                st.subheader("📦 Daily Demand Probability Array")
+                st.dataframe(df_demand)
+                st.markdown("-----")
+
+
+                # Display Lead Time Table
+                st.subheader("⏲️ Lead Time Probability Array")
+                st.dataframe(df_leadtime)
+
             else:
                 st.error("Invalid program selected.")                
         except Exception as e:
@@ -778,7 +929,7 @@ def TableData(program):
                 for x in range(days):
                     for i in range(days):
                         idx = i % len(ProbArryLeadTimeTime) 
-                        xl = RandomNum(9)
+                        xl = RandomNum(10)
                         if (ProbArryLeadTimeTime[idx, 4] >= xl) and (ProbArryLeadTimeTime[idx, 3] <= xl):
                             Pickup_lead_time.append(ProbArryLeadTimeTime[idx, 0]) 
                             break
@@ -907,6 +1058,142 @@ def TableData(program):
             st.session_state.TotalWhosWaitInQueue = TotalWhosWaitInQueue
             st.session_state.program_type = "Inventory_Daily_Management"
             return TableArry, TotalWhosWaitInQueue,"Inventory_Daily_Management"
+        elif program == "Inventory_Cycle_Management":
+
+            cycle_simulation = st.session_state.input_data_array[0]
+            start_range_demand = st.session_state.input_data_array[1]
+            end_range_demand = st.session_state.input_data_array[2]
+            start_range_lead_time = st.session_state.input_data_array[3]
+            end_range_lead_time = st.session_state.input_data_array[4]
+            demand_random_numbers = st.session_state.input_data_array[5]
+            lead_time_random_numbers = st.session_state.input_data_array[6]
+            demand_probabilities = st.session_state.input_data_array[8]
+            lead_time_probabilities = st.session_state.input_data_array[9]
+            eqaul_probabilities = st.session_state.input_data_array[10]
+            auto_random_generate = st.session_state.input_data_array[7]
+            standard_inventory_level_m = st.session_state.input_data_array[11]
+            periodic_length_n = st.session_state.input_data_array[12]
+            previous_reordering = st.session_state.input_data_array[13]
+            after_days = st.session_state.input_data_array[14]
+            starting_quantity = st.session_state.input_data_array[15]
+            shortage_case = st.session_state.input_data_array[16]
+
+            table_length = cycle_simulation * periodic_length_n + 1       
+
+            TableArry = np.zeros((table_length, 11), dtype=int)
+            day_counter = 0
+            Cumulative_demand = 0 
+            Cumulative_stock = 0
+            cumulative_shortage = 0
+            backup = 0 
+            temp = 0             
+            Pickup_lead_time = []
+            Pickup_lead_time_rand = []
+            cumulative_cycle = 1
+
+            if not eqaul_probabilities:
+                ProbValuesDemandTime = GetProbabilities(demand_probabilities)
+                ProbValuesLeadTimeTime = GetProbabilities(lead_time_probabilities)
+            else: 
+                ProbValuesDemandTime = ProbValuesLeadTimeTime = None
+
+            
+            ProbArryLeadTimeTime = CalculateProbability(start_range_lead_time, end_range_lead_time, eqaul_probabilities, ProbValuesLeadTimeTime)
+            for i in range( end_range_lead_time - start_range_lead_time  + 1):
+                ProbArryLeadTimeTime[i, 3] = ProbArryLeadTimeTime[i, 3]/ 10
+                ProbArryLeadTimeTime[i, 4] = ProbArryLeadTimeTime[i, 4]/ 10
+            
+            if not auto_random_generate:
+                RandValuesDemandTime = GetRandomNumbers(demand_random_numbers)
+                RandValuesLeadTimeTime = GetRandomNumbers(lead_time_random_numbers)
+            else:
+                RandValuesDemandTime = None
+                RandValuesLeadTimeTime = Pickup_lead_time_rand
+
+            if not auto_random_generate:
+                range_length = end_range_lead_time - start_range_lead_time + 1
+                for x in range(len(RandValuesLeadTimeTime)):
+                    for i in range(len(RandValuesLeadTimeTime)):
+                        idx = i % range_length  
+                        if (ProbArryLeadTimeTime[idx, 4] >= RandValuesLeadTimeTime[x]) and (ProbArryLeadTimeTime[idx, 3] <= RandValuesLeadTimeTime[x]):
+                            Pickup_lead_time.append(ProbArryLeadTimeTime[idx, 0]) 
+                            break
+            else:
+                for x in range(table_length):
+                    for i in range(table_length):
+                        idx = i % len(ProbArryLeadTimeTime) 
+                        xl = RandomNum(10)
+                        if (ProbArryLeadTimeTime[idx, 4] >= xl) and (ProbArryLeadTimeTime[idx, 3] <= xl):
+                            Pickup_lead_time_rand.append(xl) 
+                            Pickup_lead_time.append(ProbArryLeadTimeTime[idx, 0]) 
+                            break
+            # for i in range(table_length):    
+            #     st.write("hh",Pickup_lead_time[i],Pickup_lead_time_rand[i])
+
+                #columns=["Cyl","Day", "R-dmd", "B-Inv", "Dmd", "E-Inv", "Short", "C-sh","Ord-Q", "R-LT", "LOD-T"])
+                #columns=[" 0 ", " 1 ", " 2  ",  " 3 ", "  4 ", " 5  ", "  6 ","   7  ", " 8 ", "  9  ", " 1 0 ",                
+
+
+            for i in range(table_length):
+                #days 1-5
+                TableArry[i,1] = i % periodic_length_n + 1 
+                #cycle 1-5
+                TableArry[i,0] = cumulative_cycle
+                if TableArry[i,1] == periodic_length_n:
+                    cumulative_cycle += 1
+                #random number for demand
+                if auto_random_generate:
+                    TableArry[i,2] = RandomNum(99)
+                    TableArry[i,4] = CalRandomTime(TableArry[i,2],start_range_demand,end_range_demand,eqaul_probabilities,ProbValuesDemandTime)
+                else:
+                    TableArry[i,2] = RandValuesDemandTime[i] if i < len(RandValuesDemandTime) else RandValuesDemandTime[i % len(RandValuesDemandTime)]
+                    TableArry[i,4] = CalRandomTime(TableArry[i,2],start_range_demand,end_range_demand,eqaul_probabilities,ProbValuesDemandTime)
+
+                if i == 0:
+                    TableArry[i,3] = starting_quantity
+                else:
+                    if TableArry[i,1] == (after_days + 1) % periodic_length_n :
+                        if shortage_case:
+                            TableArry[i,3] = TableArry[i-1,5] + previous_reordering - backup if backup <= TableArry[i-1,5] + previous_reordering else 0
+                            backup = 0
+                        else:
+                            TableArry[i,3] = TableArry[i-1,5] + previous_reordering 
+                    else:
+                       TableArry[i,3] = TableArry[i-1,5] 
+
+                    # if shortage_case:
+                    # TableArry[i,3] = TableArry[i-1,5] + previous_reordering - backup if TableArry[i,1] == (after_days + 1) % periodic_length_n else TableArry[i-1,5] 
+
+                if TableArry[i,3] <= TableArry[i,4] :
+                    TableArry[i,5] =0 
+                    TableArry[i,6] = abs(TableArry[i,3] - TableArry[i,4]) # Shortage
+                    backup += TableArry[i,6]
+                else:
+                    TableArry[i,5] = TableArry[i,3] - TableArry[i,4] # Ending Inventory
+
+                cumulative_shortage += TableArry[i,6]
+                TableArry[i,7] = cumulative_shortage # Cumulative shortage
+                if TableArry[i,1] == periodic_length_n:
+                    TableArry[i,8] = standard_inventory_level_m - TableArry[i,5] - backup  # Order Quantity
+                    previous_reordering = TableArry[i,8]
+                    
+                    valid_temp = temp % len(RandValuesLeadTimeTime) if len(RandValuesLeadTimeTime) > 0 else 0
+                    TableArry[i,9] = RandValuesLeadTimeTime[valid_temp]
+                    
+                    valid_temp_pickup = temp % len(Pickup_lead_time) if len(Pickup_lead_time) > 0 else 0
+                    TableArry[i,10] = Pickup_lead_time[valid_temp_pickup]
+                    
+                    after_days = Pickup_lead_time[valid_temp_pickup] + periodic_length_n
+                    temp += 1
+                    
+
+            TableArry[table_length-1] = np.sum(TableArry[:table_length-1], axis=0)
+            TotalWhosWaitInQueue = 0
+            st.session_state.output_data_Table = TableArry
+            st.session_state.TotalWhosWaitInQueue = TotalWhosWaitInQueue
+            st.session_state.program_type = "Inventory_Cycle_Management"
+            return TableArry, TotalWhosWaitInQueue,"Inventory_Cycle_Management"              
+
         else:
             st.error("Invalid program selected.")
     except Exception as e:
@@ -1004,7 +1291,33 @@ def TablePrinter():
                 st.markdown("-----")
                 st.markdown("### 📑TOTAL DATA:")
                 st.dataframe(df_total, use_container_width=True)
-
+            elif st.session_state.program_type == "Inventory_Cycle_Management":
+                table_data = st.session_state.output_data_Table
+                cycle_simulation = st.session_state.input_data_array[0]
+                periodic_length_n = st.session_state.input_data_array[12]
+                table_length = cycle_simulation * periodic_length_n + 1
+                
+                df_table = pd.DataFrame(table_data[:-1], columns=["Cyl","Day", "R-dmd", "B-Inv", "Dmd", "E-Inv", "Short", "C-sh","Ord-Q", "R-LT", "LOD-T"])
+                                                    #columns=[" 0 ", " 1 ", " 2  ",  " 3 ", "  4 ", " 5  ", "  6 ","   7  ", " 8 ", "  9  ", " 1 0 ",
+                total_row = {
+                    "Cyl": cycle_simulation,
+                    "Day": table_length-1,
+                    "R-dmd": "",
+                    "B-Inv":"",
+                    "Dmd": table_data[ table_length-1,4],
+                    "E-Inv":table_data[ table_length-1,5],
+                    "Short": "",
+                    "C-sh":"",
+                    "Ord-Q":table_data[ table_length-1,8],
+                    "R-LT":"",
+                    "LOD-T": ""
+                }
+                df_total = pd.DataFrame([total_row])
+                st.markdown("### 🗃️ TABLE DATA:")
+                st.dataframe(df_table, use_container_width=True)
+                st.markdown("-----")
+                st.markdown("### 📑TOTAL DATA:")
+                st.dataframe(df_total, use_container_width=True)
 
             else:
                 st.error("Invalid program selected.")
@@ -1099,6 +1412,27 @@ def Statistics(program):
                     round( SumDemand / days,2) if days != 0 else 0.00,
                     round( SumShortage / days,2) if days != 0 else 0.00,
                     round( (SumDemand - SumShortage) / SumDemand * 100 ,2)if SumDemand != 0 else 0.00
+                ]
+            }
+            df = pd.DataFrame(data, columns=["Statistic", "Value"])
+            st.dataframe(df)
+        elif program_type == "Inventory_Cycle_Management":
+
+            TableArry = st.session_state.output_data_Table
+            cycle_simulation = st.session_state.input_data_array[0]
+            periodic_length_n = st.session_state.input_data_array[12]
+            table_length = cycle_simulation * periodic_length_n + 1
+            data = {
+                "Statistic": [
+                    "Average Ending Inventory (Units)",
+                    "Total Demand (Units)",
+                    "Order Quantity (Units)"
+                ],
+                "Value": [
+                    round(  TableArry[ table_length-1,5] /(table_length-1) ,2) if table_length != 0 else 0.00,
+                    round( TableArry[ table_length-1,4],2) if table_length != 0 else 0.00,
+                    round(  TableArry[ table_length-1,8],2) if table_length != 0 else 0.00,
+
                 ]
             }
             df = pd.DataFrame(data, columns=["Statistic", "Value"])
@@ -1348,6 +1682,35 @@ def Graphics(program):
             st.pyplot(fig8)
         except Exception as e:
             st.error(f"An error occurred while generating graphics: {e}")
+    elif program_type == "Inventory_Cycle_Management":
+        try:
+            st.subheader("📊 Inventory Daily Management Analysis")
+            TableArry = st.session_state.output_data_Table
+            cycle_simulation = st.session_state.input_data_array[0]
+            periodic_length_n = st.session_state.input_data_array[12]
+            table_length = cycle_simulation * periodic_length_n + 1
+            cm_b =TableArry[:table_length, 3]
+            cm_e =TableArry[:table_length, 5]
+            cm_d =TableArry[:table_length, 4]
+            col1 , col2 = st.columns(2)
+            col1.metric("Total Days", table_length -1)
+            col2.metric("Total cycles", cycle_simulation)
+            col3 , col4 = st.columns(2)
+            col3.metric("Total orders", TableArry[ table_length-1,8])
+            col4.metric("Total demand",TableArry[ table_length-1,4])
+
+            fig8, ax8 = plt.subplots()
+            ax8.plot(cm_b, label="Stock", marker='o', color='blue')
+            ax8.plot(cm_e, label="Demand", marker='x', color='orange')
+            ax8.plot(cm_d, label="Shortage", marker='x', color='red')
+            ax8.set_title("begin vs. end vs. demand")
+            ax8.set_xlabel("Days")
+            ax8.set_ylabel("Units")
+            ax8.legend()
+            ax8.grid(True, linestyle="-", alpha=0.9)
+            st.pyplot(fig8)
+        except Exception as e:
+            st.error(f"An error occurred while generating graphics: {e}")
     else:
         st.error("Invalid program type for graphics generation. Please check the program type.")
 
@@ -1460,6 +1823,46 @@ def DownloadData(program):
                 file_name="simulation_data.csv",
                 mime="text/csv"
             )
+        elif program == "Inventory_Cycle_Management":
+            st.subheader("⬇️ Download All Simulation Data")
+            TableArry = st.session_state.output_data_Table
+            df_simulation = pd.DataFrame(TableArry[:-1], columns=["Cyl","Day", "R-dmd", "B-Inv", "Dmd", "E-Inv", "Short", "C-sh","Ord-Q", "R-LT", "LOD-T"])
+            
+            # Calculate additional statistics if needed
+            cycle_simulation = st.session_state.input_data_array[0]
+            periodic_length_n = st.session_state.input_data_array[12]
+            table_length = cycle_simulation * periodic_length_n + 1
+            cm_b =TableArry[table_length-1, 3]
+            cm_e =TableArry[table_length-1, 5]
+            cm_d =TableArry[table_length-1, 4]
+
+            df_statistics = pd.DataFrame({
+                "Statistic": [
+                    "Total Days",
+                    "Total cycle",
+                    "Total Demand",
+                    "Total Shortage"
+                ],
+                "Value": [
+                    table_length -1,
+                    cycle_simulation,
+                    cm_d,
+                    TableArry[table_length-1, 6]
+                ]
+            })
+            
+            # Combine both DataFrames for downloading
+            df_combined = pd.concat([df_simulation, df_statistics], ignore_index=True)
+            
+            # Convert to CSV format
+            csv = df_combined.to_csv(index=False).encode('utf-8')
+            # Create a download button
+            st.download_button(
+                label="Download Data as CSV",
+                data=csv,
+                file_name="simulation_data.csv",
+                mime="text/csv"
+            )
         elif program == "Inventory_Daily_Management":
             st.subheader("⬇️ Download All Simulation Data")
             TableArry = st.session_state.output_data_Table
@@ -1541,7 +1944,7 @@ if st.session_state.page == "main":
     with col1:
         st.button("📊 Inventory Daily Management", on_click=lambda: go_to("Inventory_Daily_Management"))
     with col2:
-        st.button("📈 Inventory Cycle Management", on_click=lambda: go_to(""),disabled=True)
+        st.button("📈 Inventory Cycle Management", on_click=lambda: go_to("Inventory_Cycle_Management"))
     st.markdown("---")
     st.markdown("#### 🏓 Game Modules:")    
     col1, col2 = st.columns(2)
@@ -1642,7 +2045,35 @@ elif st.session_state.page == "Inventory_Daily_Management":
         with tab5:
             DownloadData("Inventory_Daily_Management")
 
+elif st.session_state.page == "Inventory_Cycle_Management":
+    visibility = True
+    st.title("📦 Inventory Cycle Management")
+    st.markdown(
+        """
+        **Manage and simulate inventory flow on a cycle basis to monitor stock levels, optimize reordering,
+        and evaluate overall system efficiency.**
 
+        This module helps in modeling cycle inventory scenarios using simulation, helping you make data-driven decisions 
+        for supply chain and stock management.
+        """ )    
+    st.sidebar.title("Settings")
+    data_array, has_error = inputs("Inventory_Cycle_Management")
+    st.session_state.input_data_array = data_array
+    simulate_btn = st.sidebar.button("Run Simulation 📊", on_click=lambda:(simulate_btn==True), disabled=has_error)
+    st.sidebar.button("🔙 Back" ,on_click=lambda:go_to("main"))
+    if simulate_btn:
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(["💡 Probabilities", "📈 Analysis", "📄 Data Report", "📊 Graphics", "⬇️ Download"])
+        with tab1:
+            ProbabilityTable("Inventory_Cycle_Management")   
+        with tab2:
+            table_data, TotalWhosWaitInQueue ,program_type  = TableData("Inventory_Cycle_Management")
+            TablePrinter()
+        with tab3:
+            Statistics("Inventory_Cycle_Management")
+        with tab4:
+            Graphics("Inventory_Cycle_Management")
+        with tab5:
+            DownloadData("Inventory_Cycle_Management")
 st.markdown(
     """
     <footer style='text-align: center; margin-top: 50px;'>
