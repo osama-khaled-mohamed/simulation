@@ -312,53 +312,81 @@ def inputs(program):
             st.sidebar.markdown("**Note:** The shortage in demand : lost forever.")
         else:
             st.sidebar.markdown("**Note:** The shortage in demand : backordered.")        
+
+    elif program == "Gambing_Game":
+        data_array= np.zeros(10, dtype=object)
+        Head = "Head"
+        Tail = "Tail"
+        data_array[0] = st.sidebar.number_input("Number of Trails (game play)", min_value=1, value=7)
+        if data_array[0] <= 1:
+            st.error("The number of simulations must be a positive integer.⚠️")
+            has_error = True
+        data_array[1] = st.sidebar.number_input("Cost Of One Flip ($) :", min_value=1, value=1)
+        data_array[2] = st.sidebar.number_input("Win Cost ($) :", min_value=1, value=8)
+        Auto_rand = st.sidebar.checkbox("Use Auto Randoms (H/T)", value=True)
+        data_array[5] = Auto_rand
+        if not Auto_rand:
+            data_array[4] = st.sidebar.text_input("Enter Random Numbers (space-separated)", "2 3 4 5") 
+            rand_values = list(map(int,data_array[4].split()))
+            for i in range(len(rand_values)):
+                if rand_values[i] < 0 or rand_values[i] > 9:
+                    st.error(f"The random value at index {i} is invalid: {rand_values[i]} ⚠️ Must be between 0 and 9.")
+                    has_error = True
+            if  not rand_values:
+                st.error("Th Randoms must be Entered ⚠️.")
+                has_error = True
+
+        if data_array[1] <= 0:
+            st.error("The Win Cost must be valid (start must be 1)⚠️.")
+            has_error = True   
+        if data_array[2] <= 0:
+            st.error("The Cost Of One Flip must be valid (start must be 1)⚠️.")
+            has_error = True   
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("### 🎰 Game Conditions ")   
+        data_array[3] = st.sidebar.number_input("Difference Between (H/T):", min_value=1, value=3) 
+        if data_array[3] <= 0:
+            st.error("The Difference Between (H/T) must be a positive integer.⚠️")
+            has_error = True
+        data_array[6] = st.sidebar.selectbox("Upper Pound (5 - 9) :", [Head, Tail], index=1)
+        data_array[7] = st.sidebar.number_input("Max Trails in One Game :", min_value=1, value=100)
+    
+
+        Initial_cost = st.sidebar.checkbox("Don't Use Initial Cost", value=True)
+        data_array[9] = Initial_cost
+        if not Initial_cost:
+            data_array[8] = st.sidebar.text_input("Enter Inital Cost ($) :", "2000") 
+            if not data_array[8]:
+                st.error("The cost must be Entered ⚠️.")
+                has_error = True
+
+
+
+        st.sidebar.markdown("---")
     else:
         st.error("Invalid program selected.")
         has_error = True
         data_array = None
     return data_array, has_error
 
-# def data_labeled():
-#     if program == "Inventory_Daily_Management":
-#         days = st.session_state.input_data_array[0]
-#         start_range_demand = st.session_state.input_data_array[1]
-#         end_range_demand = st.session_state.input_data_array[2]
-#         start_range_lead_time = st.session_state.input_data_array[3]
-#         end_range_lead_time = st.session_state.input_data_array[4]
-#         demand_random_numbers = st.session_state.input_data_array[5]
-#         lead_time_random_numbers = st.session_state.input_data_array[6]
-#         demand_probabilities = st.session_state.input_data_array[8]
-#         lead_time_probabilities = st.session_state.input_data_array[9]
-#         eqaul_probabilities = st.session_state.input_data_array[10]
-#         auto_random_generate = st.session_state.input_data_array[7]
-#         reorder_point_1_limit = st.session_state.input_data_array[11]
-#         reorder_point_1_recharge = st.session_state.input_data_array[12]
-#         reorder_point_2_limit = st.session_state.input_data_array[13]
-#         reorder_point_2_recharge = st.session_state.input_data_array[14]
-#         initial_inventory = st.session_state.input_data_array[15]
-#         shortage_case = st.session_state.input_data_array[16]
-#     elif program =="Inventory_Cycle_Management":
-#         cycle_simulation = st.session_state.input_data_array[0]
-#         start_range_demand = st.session_state.input_data_array[1]
-#         end_range_demand = st.session_state.input_data_array[2]
-#         start_range_lead_time = st.session_state.input_data_array[3]
-#         end_range_lead_time = st.session_state.input_data_array[4]
-#         demand_random_numbers = st.session_state.input_data_array[5]
-#         lead_time_random_numbers = st.session_state.input_data_array[6]
-#         demand_probabilities = st.session_state.input_data_array[8]
-#         lead_time_probabilities = st.session_state.input_data_array[9]
-#         eqaul_probabilities = st.session_state.input_data_array[10]
-#         auto_random_generate = st.session_state.input_data_array[7]
-#         standard_inventory_level_m = st.session_state.input_data_array[11]
-#         periodic_length_n = st.session_state.input_data_array[12]
-#         previous_reordering = st.session_state.input_data_array[13]
-#         after_days = st.session_state.input_data_array[14]
-#         starting_quantity = st.session_state.input_data_array[15]
-#         shortage_case = st.session_state.input_data_array[16]
+def data_labeled():
+    if program == "Inventory_Daily_Management":
+        days = st.session_state.input_data_array[0]
+    elif program == "Gambing_Game":
+        Game_cycle = st.session_state.input_data_array[0]
+        Flip_Cost = st.session_state.input_data_array[1]
+        Win_Cost = st.session_state.input_data_array[2]
+        Game_Condition = st.session_state.input_data_array[3]
+        Rand_Values = st.session_state.input_data_array[4]
+        Auto_rand = st.session_state.input_data_array[5]
+        Upper_Pound = st.session_state.input_data_array[6]
+        Max_Trails = st.session_state.input_data_array[7]
+        Inital_cost = st.session_state.input_data_array[8]
+        initial_cost_case = st.session_state.input_data_array[9]
 
 
 def RandomNum(MaxNumRange):
-   return int(random.uniform(1, MaxNumRange))
+   return int(random.uniform(0, MaxNumRange))
 def GetProbabilities(var_data):
     probabilities = np.array(list(map(float,var_data.split())))
     return probabilities
@@ -1127,12 +1155,6 @@ def TableData(program):
                             Pickup_lead_time_rand.append(xl) 
                             Pickup_lead_time.append(ProbArryLeadTimeTime[idx, 0]) 
                             break
-            # for i in range(table_length):    
-            #     st.write("hh",Pickup_lead_time[i],Pickup_lead_time_rand[i])
-
-                #columns=["Cyl","Day", "R-dmd", "B-Inv", "Dmd", "E-Inv", "Short", "C-sh","Ord-Q", "R-LT", "LOD-T"])
-                #columns=[" 0 ", " 1 ", " 2  ",  " 3 ", "  4 ", " 5  ", "  6 ","   7  ", " 8 ", "  9  ", " 1 0 ",                
-
 
             for i in range(table_length):
                 #days 1-5
@@ -1158,11 +1180,9 @@ def TableData(program):
                             backup = 0
                         else:
                             TableArry[i,3] = TableArry[i-1,5] + previous_reordering 
+                            backup = 0
                     else:
                        TableArry[i,3] = TableArry[i-1,5] 
-
-                    # if shortage_case:
-                    # TableArry[i,3] = TableArry[i-1,5] + previous_reordering - backup if TableArry[i,1] == (after_days + 1) % periodic_length_n else TableArry[i-1,5] 
 
                 if TableArry[i,3] <= TableArry[i,4] :
                     TableArry[i,5] =0 
@@ -1193,7 +1213,140 @@ def TableData(program):
             st.session_state.TotalWhosWaitInQueue = TotalWhosWaitInQueue
             st.session_state.program_type = "Inventory_Cycle_Management"
             return TableArry, TotalWhosWaitInQueue,"Inventory_Cycle_Management"              
+        elif program == "Gambing_Game":
+            Game_cycle = st.session_state.input_data_array[0]
+            Flip_Cost = st.session_state.input_data_array[1]
+            Win_Cost = st.session_state.input_data_array[2]
+            Game_Condition = st.session_state.input_data_array[3]
+            Values = st.session_state.input_data_array[4]
+            Auto_rand = st.session_state.input_data_array[5]
+            if not Auto_rand:
+                Rand_Values = list(map(int,Values.split()))
+            Upper_Pound = st.session_state.input_data_array[6] 
+            Max_trails = st.session_state.input_data_array[7]
+            st.title("🎰 Gambling Game Simulation")
+            all_game_dataframes = []
+            Initial_cost = st.session_state.input_data_array[8]
+            initial_case = st.session_state.input_data_array[9]
 
+            if not initial_case :
+                initial_cost = int(Initial_cost)
+                    
+                for i in range(Game_cycle):
+                    results = []
+                    heads = 0
+                    tails = 0
+                    trial = 0
+
+                    while abs(heads - tails) < Game_Condition and trial < Max_trails and initial_cost > 0 :
+                        trial += 1
+                        if Auto_rand:
+                            rand = RandomNum(10)
+                        else:
+                            rand = Rand_Values[trial - 1] if trial - 1 < len(Rand_Values) else Rand_Values[(trial - 1) % len(Rand_Values)]
+                        if rand < 5:
+                            result = "Tail" if Upper_Pound == "Head" else "Head"  # عكس القيمة
+                        else:
+                            result = Upper_Pound  
+
+                        if result == "Head":
+                            heads += 1
+                        else:
+                            tails += 1
+                        if abs(heads - tails) < Game_Condition and trial < Max_trails:
+                            Payment = 0
+                            Win =0
+                        else:
+
+                            if trial >= Max_trails:
+                                Payment = Max_trails * Flip_Cost
+                                Win = 0
+                            else:
+                                Payment = trial * Flip_Cost
+                                Win = Win_Cost
+
+                        row = [trial ,rand, result, heads, tails ,Payment,Win]
+                        results.append(row)
+
+                    balance = Win - Payment
+
+                    initial_cost += balance
+
+                    if initial_cost < 0:
+                        st.error(f"💔 You lost! all money $")
+                        if trial == 1:
+                            row = [0 ,0, 0, 0, 0 ,0,0]
+                            results.append(row)
+                        break    
+                    columns = ["Trial","Random", "Result", "Heads", "Tails", "Payment", "Win"]
+                    df = pd.DataFrame(results, columns=columns)
+                    all_game_dataframes.append(df)
+                    st.subheader(f"🕹️ Game {i+1} Results:")    
+                    with st.expander(f"📊 Game {i+1} Summary (Finished in {trial} trials with {balance} $) "):
+                        st.dataframe(df)
+                        if balance > 0:
+                            st.success(f"🏆 You won! Final Balance: {balance}$")
+                        else:   
+                            st.error(f"💔 You lost! Final Balance: {balance}$")
+            else:
+                    
+                for i in range(Game_cycle):
+                    results = []
+                    heads = 0
+                    tails = 0
+                    trial = 0
+
+                    while abs(heads - tails) < Game_Condition and trial < Max_trails :
+                        trial += 1
+                        if Auto_rand:
+                            rand = RandomNum(10)
+                        else:
+                            rand = Rand_Values[trial - 1] if trial - 1 < len(Rand_Values) else Rand_Values[(trial - 1) % len(Rand_Values)]
+                        if rand < 5:
+                            result = "Tail" if Upper_Pound == "Head" else "Head"  # عكس القيمة
+                        else:
+                            result = Upper_Pound  
+
+                        if result == "Head":
+                            heads += 1
+                        else:
+                            tails += 1
+                        if abs(heads - tails) < Game_Condition and trial < Max_trails:
+                            Payment = 0
+                            Win =0
+                        else:
+
+                            if trial >= Max_trails:
+                                Payment = Max_trails * Flip_Cost
+                                Win = 0
+                            else:
+                                Payment = trial * Flip_Cost
+                                Win = Win_Cost
+                        row = [trial ,rand, result, heads, tails ,Payment,Win]
+                        results.append(row)
+                    balance = Win - Payment
+                    columns = ["Trial","Random", "Result", "Heads", "Tails", "Payment", "Win"]
+                    df = pd.DataFrame(results, columns=columns)
+                    all_game_dataframes.append(df)
+                    st.subheader(f"🕹️ Game {i+1} Results:")    
+                    with st.expander(f"📊 Game {i+1} Summary (Finished in {trial} trials with {balance} $) "):
+                        st.dataframe(df)
+                        if balance > 0:
+                            st.success(f"🏆 You won! Final Balance: {balance}$")
+                        else:   
+                            st.error(f"💔 You lost! Final Balance: {balance}$")
+
+
+
+            TableArry_list = [df.to_numpy() for df in all_game_dataframes]
+            TableArry = pd.concat(all_game_dataframes, keys=[f"Game {i+1}" for i in range(Game_cycle)])
+            TableArry = TableArry.reset_index(level=0).rename(columns={"level_0": "Game"})
+            TotalWhosWaitInQueue = 0
+            st.session_state.output_data_Table = TableArry
+            st.session_state.TotalWhosWaitInQueue = TotalWhosWaitInQueue
+            st.session_state.program_type = "Gambing_Game"
+            return TableArry, TotalWhosWaitInQueue,"Gambing_Game"     
+                   
         else:
             st.error("Invalid program selected.")
     except Exception as e:
@@ -1318,7 +1471,41 @@ def TablePrinter():
                 st.markdown("-----")
                 st.markdown("### 📑TOTAL DATA:")
                 st.dataframe(df_total, use_container_width=True)
+            elif st.session_state.program_type == "Gambing_Game":
+                df_table = st.session_state.output_data_Table 
+                table_data = st.session_state.output_data_Table
+                Game_cycle = st.session_state.input_data_array[0]
+                Flip_Cost = st.session_state.input_data_array[1]
+                total_win = table_data["Win"].sum()
+                total_payment = table_data["Payment"].sum()
+                intial_cost =int( st.session_state.input_data_array[8])
+                heads = 0
+                tails = 0
+                Trail = total_payment/Flip_Cost
+                itrator = round(Trail)
+                for i in range(itrator):
+                    if df_table.iloc[i]["Result"] == "Head":
+                        heads += 1
+                    else:
+                        tails += 1
+                
+                df_table = pd.DataFrame(table_data, columns=["Game","Trial", "Random", "Result", "Heads", "Tails", "Payment", "Win"])
 
+                total_row = {
+                    "Game":df_table["Game"].iloc[itrator-1][5] ,
+                    "Trial": Trail,
+                    "Heads": heads,
+                    "Tails": tails,
+                    "Payment": total_payment,
+                    "Win": total_win,
+                    "Balance": intial_cost+ total_win - total_payment,
+                }
+                df_total = pd.DataFrame([total_row])
+                st.subheader("🎰 Tablel Simulation")
+                st.dataframe(df_table, use_container_width=True)
+                st.markdown("-----")
+                st.subheader("📑Total Simulation")
+                st.dataframe(df_total, use_container_width=True)
             else:
                 st.error("Invalid program selected.")
         except Exception as e:
@@ -1438,10 +1625,11 @@ def Statistics(program):
             df = pd.DataFrame(data, columns=["Statistic", "Value"])
             st.dataframe(df)
 
+
     except Exception as e:
         st.error(f"An error occurred while calculating statistics: {e}")
 
-def Graphics(program):
+def Graphics(program_type):
     if program_type == "single_server":
         try:
             st.subheader("📊 Customer Time Analysis")
@@ -1711,6 +1899,142 @@ def Graphics(program):
             st.pyplot(fig8)
         except Exception as e:
             st.error(f"An error occurred while generating graphics: {e}")
+
+    elif program_type == "Gambing_Game_statistics": 
+        try:    
+            st.subheader("🧰 Data Entered ")
+            Game_cycle = st.session_state.input_data_array[0]
+            Flip_Cost = st.session_state.input_data_array[1]
+            Win_Cost = st.session_state.input_data_array[2]
+            Game_Condition = st.session_state.input_data_array[3]
+            Rand_Values = st.session_state.input_data_array[4]
+            Auto_rand = st.session_state.input_data_array[5]
+            Upper_Pound = st.session_state.input_data_array[6] 
+            Max_trails = st.session_state.input_data_array[7] 
+            initial_cost = st.session_state.input_data_array[8]
+
+            col1 , col2 = st.columns(2)
+            col1.metric("Game Played", Game_cycle)
+            col2.metric("Max trials/game", Max_trails)
+            col3 , col4 = st.columns(2)
+            col3.metric("Cost of Win", Win_Cost)
+            col4.metric("Cost of Flip", Flip_Cost)
+            col6 ,col7  = st.columns(2)
+            col7.metric("Game Condition", Game_Condition)
+            col6.metric("| Tail - Head | = ", Game_Condition)
+            col8 ,col9 = st.columns(2)
+            col8.metric("Upper Pound", Upper_Pound) 
+            col9.metric("Initial Cost", initial_cost) 
+        except Exception as e:
+            st.error(f"An error occurred while generating graphics: {e}")
+    elif program_type == "Gambing_Game_statistics_output": 
+        try:    
+
+            df_table = st.session_state.output_data_Table 
+            table_data = st.session_state.output_data_Table
+            Game_cycle = st.session_state.input_data_array[0]
+            Flip_Cost = st.session_state.input_data_array[1]
+            total_win = table_data["Win"].sum()
+            total_payment = table_data["Payment"].sum()
+            intial_cost =int( st.session_state.input_data_array[8])
+            heads = 0
+            tails = 0
+
+            hamada = ""
+            Trail = total_payment/Flip_Cost
+            itrator = round(Trail)
+            for i in range(itrator):
+                if df_table.iloc[i]["Result"] == "Head":
+                    heads += 1
+                else:
+                    tails += 1
+            hamada2=int(df_table["Game"].iloc[itrator-1][5])
+            if total_win - total_payment > 0 and Game_cycle == hamada2:
+                hamada = "winner 🎉"
+            elif total_win - total_payment < 0 or Game_cycle > hamada2 :
+                hamada = "loser 💔"
+            else:
+                hamada = "draw 🙄"
+            st.subheader("📑TOTAL Result")
+            st.markdown("-----")
+            st.title("You Are : "+ hamada)
+            st.markdown("-----")
+            col1 , col2 = st.columns(2)
+            col1.metric("Game Played", hamada2)
+            col2.metric("Total Trials", Trail)
+            col3 , col4 = st.columns(2)
+            col3.metric("Total Win", total_win)
+            col4.metric("Total Payment", total_payment)
+            col6 ,col7  = st.columns(2)
+            col7.metric("Total Balance", intial_cost + total_win - total_payment)
+            col6.metric("Total return cost", total_win - total_payment )
+            col8 ,col9 = st.columns(2)
+            col8.metric("Tail", tails) 
+            col9.metric("Head", heads) 
+        except Exception as e:
+            st.error(f"An error occurred while generating graphics: {e}")
+    elif program_type == "Gambing_Game_results":
+        try:    
+            df_table = st.session_state.output_data_Table 
+            table_data = st.session_state.output_data_Table
+            Game_cycle = st.session_state.input_data_array[0]
+            Flip_Cost = st.session_state.input_data_array[1]
+            total_win = table_data["Win"].sum()
+            total_payment = table_data["Payment"].sum()
+            intial_cost =int( st.session_state.input_data_array[8])
+            heads = 0
+            tails = 0
+            hamada = ""
+            Trail = total_payment/Flip_Cost
+            itrator = round(Trail)
+            for i in range(itrator):
+                if df_table.iloc[i]["Result"] == "Head":
+                    heads += 1
+                else:
+                    tails += 1
+            hamada2=int(df_table["Game"].iloc[itrator-1][5])
+
+            fig8, ax8 = plt.subplots()           
+            ax8.plot(df_table["Game"], df_table["Payment"], label="Payment", marker='o', color='blue')
+            ax8.plot(df_table["Game"], df_table["Win"], label="Win", marker='x', color='orange')
+            ax8.set_title("Payment vs. Win")
+            ax8.set_xlabel("Game")
+            ax8.set_ylabel("Units")
+            ax8.legend()
+            ax8.grid(True, linestyle="-", alpha=0.9)
+            st.pyplot(fig8)
+
+            fig9, ax1 = plt.subplots()
+            ax1.bar(df_table["Game"], df_table["Heads"], color='red')
+            ax1.bar(df_table["Game"], df_table["Tails"], color='blue')
+            ax1.set_title("Heads vs. Tails")
+            ax1.set_xlabel("Game")
+            ax1.set_ylabel("Units")
+            ax1.legend(["Heads", "Tails"])
+            ax1.grid(True, linestyle="--", alpha=0.9)
+            st.pyplot(fig9)
+
+            for i in range(hamada2):
+                game_name = f"Game {i+1}"
+                game_data = df_table[df_table["Game"] == game_name]
+
+                if not game_data.empty:
+                    fig, ax = plt.subplots()
+                    ax.plot(game_data["Trial"], game_data["Heads"], label="Heads", marker='o', color='blue')
+                    ax.plot(game_data["Trial"], game_data["Tails"], label="Tails", marker='x', color='orange')
+                    ax.set_title(f"Heads vs. Tails - {game_name}")
+                    ax.set_xlabel("Trial")
+                    ax.set_ylabel("Count")
+                    ax.legend()
+                    ax.grid(True, linestyle="--", alpha=0.7)
+                    st.pyplot(fig)
+                else:
+                    st.warning(f"No data found for {game_name}")
+
+
+        except Exception as e:
+            st.error(f"An error occurred while generating graphics: {e}")
+
     else:
         st.error("Invalid program type for graphics generation. Please check the program type.")
 
@@ -1909,7 +2233,20 @@ def DownloadData(program):
                 file_name="simulation_data.csv",
                 mime="text/csv"
             )
-
+        elif program == "Gambing_Game":
+            st.subheader("⬇️ Download All Simulation Data")
+            TableArry = st.session_state.output_data_Table
+            df_simulation = pd.DataFrame(TableArry, columns=["Game", "Trial", "Result", "Heads", "Tails", "Payment", "Win"])
+            
+            # Convert to CSV format
+            csv = df_simulation.to_csv(index=False).encode('utf-8')
+            # Create a download button
+            st.download_button(
+                label="Download Data as CSV",
+                data=csv,
+                file_name="simulation_data.csv",
+                mime="text/csv"
+            )
         else:
             st.error("Invalid program type for download data generation. Please check the program type.")
     except Exception as e:
@@ -1949,7 +2286,7 @@ if st.session_state.page == "main":
     st.markdown("#### 🏓 Game Modules:")    
     col1, col2 = st.columns(2)
     with col1:
-        st.button("💰 Gambing Game", on_click=lambda: go_to(""),disabled=True)
+        st.button("💰 Gambing Game", on_click=lambda: go_to("Gambing_Game"))
     with col2:
         st.button("🧩 A Hinge Assembly", on_click=lambda: go_to(""),disabled=True)  
     st.markdown("---")    
@@ -2074,6 +2411,37 @@ elif st.session_state.page == "Inventory_Cycle_Management":
             Graphics("Inventory_Cycle_Management")
         with tab5:
             DownloadData("Inventory_Cycle_Management")
+
+elif st.session_state.page == "Gambing_Game":
+    visibility = True
+    st.title("💰 Gambing Game")
+    st.markdown(
+        """
+        **Manage and simulate gambling scenarios to monitor stock levels, optimize reordering,
+        and evaluate overall system efficiency.**
+
+        This module helps in modeling gambling scenarios using simulation, helping you make data-driven decisions 
+        for supply chain and stock management.
+        """ )    
+    st.sidebar.title(" 👨🏻‍🔧 Settings")
+    data_array, has_error = inputs("Gambing_Game")
+    st.session_state.input_data_array = data_array
+    simulate_btn = st.sidebar.button("Run Simulation 📊", on_click=lambda:(simulate_btn==True), disabled=has_error)
+    st.sidebar.button("🔙 Back" ,on_click=lambda:go_to("main"))
+    if simulate_btn:
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(["💡 Data Entered", "📈 Analysis", "📄 Statistics", "📊 Graphics", "⬇️ Download"])
+        with tab1:
+            Graphics("Gambing_Game_statistics")   
+        with tab2:
+            table_data, TotalWhosWaitInQueue ,program_type  = TableData("Gambing_Game")
+            TablePrinter()
+        with tab3:
+            Graphics("Gambing_Game_statistics_output")
+        with tab4:
+            Graphics("Gambing_Game_results")
+        with tab5:
+            DownloadData("Gambing_Game")
+
 st.markdown(
     """
     <footer style='text-align: center; margin-top: 50px;'>
