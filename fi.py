@@ -3,6 +3,7 @@ import random
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import urllib.parse
 
 visibility = False
 
@@ -363,6 +364,50 @@ def inputs(program):
 
 
         st.sidebar.markdown("---")
+    
+    elif program == "Hinge_Assembly":
+        data_array= np.zeros(11, dtype=object)
+        data_array[0] = st.sidebar.number_input("Number of Trails (Assembly)", min_value=1, value=20)
+        if data_array[0] <= 1:
+            st.error("The number of simulations must be a positive integer.⚠️")
+            has_error = True
+
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("### 🌒 Assembled Parts (A + B + C) ")  
+        col1, col2  = st.sidebar.columns(2)
+        with col1:data_array[1] = st.number_input("A Size:", min_value=1.0, value=2.0)
+        with col2:data_array[2] = st.number_input("± A Ratio", min_value=0.0001, value=0.05, max_value=0.9999)        
+        col1, col2 = st.sidebar.columns(2)
+        with col1:data_array[3] = st.number_input("B Size:", min_value=1.0, value=2.0)
+        with col2:data_array[4] = st.number_input("± B Ratio", min_value=0.0001, value=0.05 , max_value=0.9999)  
+        col1, col2 = st.sidebar.columns(2)
+        with col1:data_array[5] = st.number_input("C Size:", min_value=1.0, value=30.0)
+        with col2:data_array[6] = st.number_input("± C Ratio", min_value=0.0001, value=0.5 , max_value=0.9999)  
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("### 🌖 General Part (D) ")   
+        col1, col2  = st.sidebar.columns(2)
+        with col1:data_array[7] = st.number_input("D Size:", min_value=1.0, value=34.5)
+        with col2:data_array[8] = st.number_input("± D Ratio", min_value=0.0001, value=0.5, max_value=0.9999) 
+        st.sidebar.markdown("---")
+        Auto_rand = st.sidebar.checkbox("Use Auto Randoms", value=True)
+        data_array[10] = Auto_rand
+        if not Auto_rand:
+            data_array[9] = st.sidebar.text_input("Enter Integer Random (space-separated)", "44 56 32 12 23 45 67 89 90 11 22 33 44 55 66 77 23 45 67 89") 
+            rand_values = list(map(int,data_array[9].split()))
+            for i in range(len(rand_values)):
+                if rand_values[i] < 0 or rand_values[i] > 99:
+                    st.error(f"The random value at index {i} is invalid: {rand_values[i]} ⚠️ Must be between 0 and 99.")
+                    has_error = True
+            if len(rand_values) != data_array[0]*4:
+                st.error(f"The random values must be equal to the number of trails * number of part (4) .⚠️")
+                has_error = True
+            if  not rand_values:
+                st.error("Th Randoms must be Entered ⚠️.")
+                has_error = True
+        if data_array[1] + data_array[3] + data_array[5] > (data_array[7] - data_array[8]):
+            st.error("Can't Assembled : Shape(a+b+c) > Shape(d).⚠️")
+            has_error = True
+      
     else:
         st.error("Invalid program selected.")
         has_error = True
@@ -383,6 +428,18 @@ def data_labeled():
         Max_Trails = st.session_state.input_data_array[7]
         Inital_cost = st.session_state.input_data_array[8]
         initial_cost_case = st.session_state.input_data_array[9]
+    elif program == "Hinge_Assembly":
+        assembly = st.session_state.input_data_array[0]
+        A_size = st.session_state.input_data_array[1]
+        A_ratio = st.session_state.input_data_array[2]
+        B_size = st.session_state.input_data_array[3]
+        B_ratio = st.session_state.input_data_array[4]
+        C_size = st.session_state.input_data_array[5]
+        C_ratio = st.session_state.input_data_array[6]
+        D_size = st.session_state.input_data_array[7]
+        D_ratio = st.session_state.input_data_array[8]
+        Auto_rand = st.session_state.input_data_array[10]
+        rand_values = st.session_state.input_data_array[9]
 
 
 def RandomNum(MaxNumRange):
@@ -668,7 +725,39 @@ def ProbabilityTable(program):
                 # Display Lead Time Table
                 st.subheader("⏲️ Lead Time Probability Array")
                 st.dataframe(df_leadtime)
+            elif program == "Hinge_Assembly":
 
+                A_size = st.session_state.input_data_array[1]
+                A_ratio = st.session_state.input_data_array[2]
+                B_size = st.session_state.input_data_array[3]
+                B_ratio = st.session_state.input_data_array[4]
+                C_size = st.session_state.input_data_array[5]
+                C_ratio = st.session_state.input_data_array[6]
+                D_size = st.session_state.input_data_array[7]
+                D_ratio = st.session_state.input_data_array[8]
+
+                st.subheader("🔑 Assembly Parts Equations:")
+                st.latex(fr"A_{{part}} = {A_size} ± {A_ratio}")
+                st.latex(fr"B_{{part}} = {B_size} ± {B_ratio}")
+                st.latex(fr"C_{{part}} = {C_size} ± {C_ratio}")
+                st.latex(fr"D_{{part}} = {D_size} ± {D_ratio}")
+                st.markdown("-----")
+
+                headers = ["Part", "Minmum", "Maximum"]
+                part_ranges = {
+                    "A": (A_size - A_ratio, A_size + A_ratio),
+                    "B": (B_size - B_ratio, B_size + B_ratio),
+                    "C": (C_size - C_ratio, C_size + C_ratio),
+                    "D": (D_size - D_ratio, D_size + D_ratio),
+                }
+
+                # تحويلها لقائمة لسهولة تحويلها لجدول
+                rows = [[part, min_val, max_val] for part, (min_val, max_val) in part_ranges.items()]
+
+
+                df_Assembly = pd.DataFrame(rows, columns=headers)
+                st.subheader("📦 Assembly Parts Table")
+                st.dataframe(df_Assembly)   
             else:
                 st.error("Invalid program selected.")                
         except Exception as e:
@@ -1346,7 +1435,85 @@ def TableData(program):
             st.session_state.TotalWhosWaitInQueue = TotalWhosWaitInQueue
             st.session_state.program_type = "Gambing_Game"
             return TableArry, TotalWhosWaitInQueue,"Gambing_Game"     
-                   
+        elif program == "Hinge_Assembly":
+
+            assembly = st.session_state.input_data_array[0]
+            A_size = st.session_state.input_data_array[1]
+            A_ratio = st.session_state.input_data_array[2]
+            B_size = st.session_state.input_data_array[3]
+            B_ratio = st.session_state.input_data_array[4]
+            C_size = st.session_state.input_data_array[5]
+            C_ratio = st.session_state.input_data_array[6]
+            D_size = st.session_state.input_data_array[7]
+            D_ratio = st.session_state.input_data_array[8]
+            Auto_rand = st.session_state.input_data_array[10]
+            randd = st.session_state.input_data_array[9]
+            if not Auto_rand :
+                rand_values = list(map(int,randd.split())) 
+
+            TableArry = np.zeros((assembly, 11), dtype=object)
+            def calculation(type,rand):
+                if type == "A":
+                    if A_size > 0 and A_size <= 9:
+                        size = 0.1
+                        return (A_size - A_ratio) + size * rand
+                    elif A_size > 9 and A_size <= 99:
+                        size = 1
+                        return (A_size - A_ratio) + size * rand
+                elif type == "B":
+                    if B_size > 0 and B_size <= 9:
+                        size = 0.1
+                        return (B_size - B_ratio) + size * rand
+                    elif B_size > 9 and B_size <= 99:
+                        size = 1
+                        return (B_size - B_ratio) + size * rand
+                elif type == "C":
+                    if C_size > 0 and C_size <= 9:
+                        size = 0.1
+                        return (C_size - C_ratio) + size * rand
+                    elif C_size > 9 and C_size <= 99:
+                        size = 1
+                        return (C_size - C_ratio) + size * rand
+                elif type == "D":
+                    if D_size > 0 and D_size <= 9:
+                        size = 0.1
+                        return (D_size - D_ratio) + size * rand
+                    elif D_size > 9 and D_size <= 99:
+                        size = 1
+                        return (D_size - D_ratio) + size * rand
+                else:
+                    st.error("Invalid type.")
+
+
+
+            for i in range(assembly):
+                TableArry[i,0] = i + 1
+                if Auto_rand:
+                    TableArry[i,1] = "{:.2f}".format(RandomNum(99) / 100)
+                    TableArry[i,3] = "{:.2f}".format(RandomNum(99) / 100)
+                    TableArry[i,5] = "{:.2f}".format(RandomNum(99) / 100)
+                    TableArry[i,8] = "{:.2f}".format(RandomNum(99) / 100)  
+                else:
+                    rand_len = len(rand_values)
+                    TableArry[i,1] = "{:.2f}".format(rand_values[(4 * i) % rand_len] / 100)
+                    TableArry[i,3] = "{:.2f}".format(rand_values[(4 * i + 1) % rand_len] / 100)
+                    TableArry[i,5] = "{:.2f}".format(rand_values[(4 * i + 2) % rand_len] / 100)
+                    TableArry[i,8] = "{:.2f}".format(rand_values[(4 * i + 3) % rand_len] / 100)
+                TableArry[i,2] = "{:.2f}".format(calculation("A",float(TableArry[i,1])))
+                TableArry[i,4] = "{:.2f}".format(calculation("B",float(TableArry[i,3])))
+                TableArry[i,6] = "{:.2f}".format(calculation("C",float(TableArry[i,5])))
+                TableArry[i,7] = "{:.2f}".format(float(TableArry[i,2]) +float( TableArry[i,4] )+float( TableArry[i,6]))
+                TableArry[i,9] = "{:.2f}".format(calculation("D",float(TableArry[i,8])))
+                if float(TableArry[i,7]) > float(TableArry[i,9]):
+                    TableArry[i,10] = "-"
+                else:
+                    TableArry[i,10] = "+"
+            
+            TotalWhosWaitInQueue = 0
+            st.session_state.output_data_Table = TableArry
+            st.session_state.TotalWhosWaitInQueue = TotalWhosWaitInQueue
+            st.session_state.program_type = "Hinge_Assembly"
+            return TableArry, TotalWhosWaitInQueue,"Hinge_Assembly"                    
         else:
             st.error("Invalid program selected.")
     except Exception as e:
@@ -1506,6 +1673,43 @@ def TablePrinter():
                 st.markdown("-----")
                 st.subheader("📑Total Simulation")
                 st.dataframe(df_total, use_container_width=True)
+            elif st.session_state.program_type == "Hinge_Assembly":
+                table_data = st.session_state.output_data_Table
+                assembly = st.session_state.input_data_array[0]
+
+                multi_index = pd.MultiIndex.from_tuples([
+                    ("Index", "i"),
+                    ("A Part Size", "Rand-A"),
+                    ("A Part Size", "A"),
+                    ("B Part Size", "Rand-B"),
+                    ("B Part Size", "B"),
+                    ("C Part Size", "Rand-C"),
+                    ("C Part Size", "C"),
+                    ( "Total","A+B+C"),
+                    ("D Part Size", "Rand-D"),
+                    ("D Part Size", "D"),
+                    ("Results", "Sine"),
+                ])
+
+
+                df_table = pd.DataFrame(table_data, columns=multi_index)
+                
+                def highlight_sine_column(row):
+                    color = ''
+                    if row[("Results", "Sine")] == "-":
+                        color = 'background-color:#a20909'
+                    elif row[("Results", "Sine")] == "+":
+                        color = 'background-color: #0c901c'
+                    else:
+                        color = 'background-color: #08154d'
+
+                    return [color if col == ("Results", "Sine") else '' for col in row.index]
+
+                styled_table = df_table.style.apply(highlight_sine_column, axis=1)
+
+                st.markdown("### 🗃️ TABLE DATA:")
+                #st.dataframe(df_table, use_container_width=True)
+                st.dataframe(styled_table, use_container_width=True)
             else:
                 st.error("Invalid program selected.")
         except Exception as e:
@@ -1899,6 +2103,48 @@ def Graphics(program_type):
             st.pyplot(fig8)
         except Exception as e:
             st.error(f"An error occurred while generating graphics: {e}")
+    elif program_type == "Hinge_Assembly":
+        try:
+            st.subheader("📊 Hinge Assembly Analysis")
+            TableArry = st.session_state.output_data_Table
+            assembly = st.session_state.input_data_array[0]
+            cm_a =TableArry[:assembly, 2]
+            cm_b =TableArry[:assembly, 4]
+            cm_c =TableArry[:assembly, 6]
+            cm_d =TableArry[:assembly, 9]
+            total=TableArry[:assembly, 7]
+            
+            plus=0
+            for i in range(assembly):
+                if TableArry[i, 10] == "-": plus+=1
+       
+            col1  = st.columns(1)[0]
+            col1.metric("Total Probability not assembled (%)", plus/assembly*100)
+            col3 , col4 = st.columns(2)
+            col3.metric("Total Assembled", assembly - plus)
+            col4.metric("Total Not Assembled", plus)
+
+            fig8, ax8 = plt.subplots()
+            ax8.plot(cm_a, label="A Part Size", marker='o', color='blue')
+            ax8.plot(cm_b, label="B Part Size", marker='x', color='orange')
+            ax8.plot(cm_c, label="C Part Size", marker='o', color='red')
+            ax8.set_title("A vs. B vs. C Part Size")
+            ax8.set_xlabel("Assembly")
+            ax8.set_ylabel("Units")
+            ax8.legend()
+            ax8.grid(True, linestyle="-", alpha=0.9)
+            st.pyplot(fig8)
+            fig9, ax9 = plt.subplots()
+            ax9.plot(total, label="D Part Size", marker='o', color='blue')
+            ax9.plot(cm_d, label="D Part Size", marker='x', color='orange')
+            ax9.set_title("D Part Size")
+            ax9.set_xlabel("Assembly")
+            ax9.set_ylabel("Units")
+            ax9.legend()
+            ax9.grid(True, linestyle="-", alpha=0.9)
+            st.pyplot(fig9)
+        except Exception as e:
+            st.error(f"An error occurred while generating graphics: {e}")
 
     elif program_type == "Gambing_Game_statistics": 
         try:    
@@ -1971,6 +2217,9 @@ def Graphics(program_type):
             col8 ,col9 = st.columns(2)
             col8.metric("Tail", tails) 
             col9.metric("Head", heads) 
+            col10 ,col11 = st.columns(2)
+            col10.metric("Avarage requirement flips played (flips)", Trail/hamada2)
+            col11.metric("Avarage requirement flips Must played (flips)", Trail/Game_cycle)
         except Exception as e:
             st.error(f"An error occurred while generating graphics: {e}")
     elif program_type == "Gambing_Game_results":
@@ -2236,7 +2485,36 @@ def DownloadData(program):
         elif program == "Gambing_Game":
             st.subheader("⬇️ Download All Simulation Data")
             TableArry = st.session_state.output_data_Table
-            df_simulation = pd.DataFrame(TableArry, columns=["Game", "Trial", "Result", "Heads", "Tails", "Payment", "Win"])
+            
+            multi_index = pd.MultiIndex.from_tuples([
+                ("Index", "i"),
+                ("A Part Size", "Rand-A"),
+                ("A Part Size", "A"),
+                ("B Part Size", "Rand-B"),
+                ("B Part Size", "B"),
+                ("C Part Size", "Rand-C"),
+                ("C Part Size", "C"),
+                ( "Total","A+B+C"),
+                ("D Part Size", "Rand-D"),
+                ("D Part Size", "D"),
+                ("Results", "Sine"),
+            ])
+
+
+            df_simulation = pd.DataFrame(TableArry, columns=multi_index)            
+
+            csv = df_simulation.to_csv(index=False).encode('utf-8')
+
+            st.download_button(
+                label="Download Data as CSV",
+                data=csv,
+                file_name="simulation_data.csv",
+                mime="text/csv"
+            )
+        elif program == "Hinge_Assembly":
+            st.subheader("⬇️ Download All Simulation Data")
+            TableArry = st.session_state.output_data_Table
+            df_simulation = pd.DataFrame(TableArry, columns=["Assembly", "A Part Size", "B Part Size", "C Part Size", "D Part Size"])
             
             # Convert to CSV format
             csv = df_simulation.to_csv(index=False).encode('utf-8')
@@ -2288,7 +2566,7 @@ if st.session_state.page == "main":
     with col1:
         st.button("💰 Gambing Game", on_click=lambda: go_to("Gambing_Game"))
     with col2:
-        st.button("🧩 A Hinge Assembly", on_click=lambda: go_to(""),disabled=True)  
+        st.button("🧩 A Hinge Assembly", on_click=lambda: go_to("Hinge_Assembly"))  
     st.markdown("---")    
     st.markdown("#### 🗞️ Dealer Modules:")    
     col1, col2 = st.columns(2)
@@ -2297,9 +2575,33 @@ if st.session_state.page == "main":
     st.markdown("---")
     with st.expander("ℹ️ About the App", expanded=False):
         st.markdown(
-            "This web application is designed to simulate various operational models, "
+            "This web application is designed by Eng\ Osama khaled to simulate various operational models, "
             "providing insights into system performance and behavior. "
             "Explore the modules to understand how different parameters affect the system."
+        )
+    phone_number = "201201360725" 
+    message = "مرحبًا، أحتاج إلى مساعدة بخصوص مشروعك 🙏" 
+
+    encoded_message = urllib.parse.quote(message)
+    whatsapp_url = f"https://wa.me/{phone_number}?text={encoded_message}"
+
+    st.markdown(
+            f"""
+            <a href="{whatsapp_url}" target="_blank">
+                <button style="
+                    background-color: #167514;
+                    color: white;
+                    padding: 10px 20px;
+                    border: none;
+                    border-radius: 8px;
+                    font-size: 16px;
+                    cursor: pointer;
+                ">
+                    💬 Connect What's app
+                </button>
+            </a>
+            """,
+            unsafe_allow_html=True
         )
 
 
@@ -2442,6 +2744,33 @@ elif st.session_state.page == "Gambing_Game":
         with tab5:
             DownloadData("Gambing_Game")
 
+elif st.session_state.page == "Hinge_Assembly":
+    visibility = True
+    st.title("🧩 A Hinge Assembly")
+    st.markdown(
+        """
+        **Experience hinge assembly like never before simulate real-time scenarios to evaluate efficiency,
+        track component usage, and achieve successful builds.**
+
+        This simulation module is designed to reflect real-world assembly challenges, helping you make 
+        smarter decisions in production, planning, and process optimization.
+        """   )
+    st.sidebar.title(" 👨🏻‍🔧 Settings")
+    data_array, has_error = inputs("Hinge_Assembly")
+    st.session_state.input_data_array = data_array
+    simulate_btn = st.sidebar.button("Run Simulation 📊", on_click=lambda:(simulate_btn==True), disabled=has_error)
+    st.sidebar.button("🔙 Back" ,on_click=lambda:go_to("main"))
+    if simulate_btn:
+        tab1, tab2, tab3, tab4 = st.tabs(["💡 Data Entered", "📈 Analysis", "📄 Statistics", "⬇️ Download"])
+        with tab1:
+            ProbabilityTable("Hinge_Assembly")  
+        with tab2:
+            table_data, TotalWhosWaitInQueue ,program_type  = TableData("Hinge_Assembly")
+            TablePrinter()
+        with tab3:
+            Graphics("Hinge_Assembly")
+        with tab4:
+            DownloadData("Gambing_Game")
 st.markdown(
     """
     <footer style='text-align: center; margin-top: 50px;'>
