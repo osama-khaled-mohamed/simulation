@@ -2,4 +2,4 @@ streamlit
 pandas
 matplotlib
 numpy
-urllib
+urllib.parse
