@@ -2575,7 +2575,7 @@ if st.session_state.page == "main":
     st.markdown("---")
     with st.expander("ℹ️ About the App", expanded=False):
         st.markdown(
-            "This web application is designed by Eng\ Osama khaled to simulate various operational models, "
+            "This web application is designed by Eng. Osama khaled to simulate various operational models, "
             "providing insights into system performance and behavior. "
             "Explore the modules to understand how different parameters affect the system."
         )
