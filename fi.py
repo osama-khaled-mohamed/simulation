@@ -322,8 +322,8 @@ def inputs(program):
         if data_array[0] <= 1:
             st.error("The number of simulations must be a positive integer.⚠️")
             has_error = True
-        data_array[1] = st.sidebar.number_input("Cost Of One Flip ($) :", min_value=1, value=1)
-        data_array[2] = st.sidebar.number_input("Win Cost ($) :", min_value=1, value=8)
+        data_array[1] = st.sidebar.number_input("Cost Of One Flip ($) :", min_value=1.0, value=1.0)
+        data_array[2] = st.sidebar.number_input("Win Cost ($) :", min_value=1.0, value=8.0)
         Auto_rand = st.sidebar.checkbox("Use Auto Randoms (H/T)", value=True)
         data_array[5] = Auto_rand
         if not Auto_rand:
@@ -407,7 +407,86 @@ def inputs(program):
         if data_array[1] + data_array[3] + data_array[5] > (data_array[7] - data_array[8]):
             st.error("Can't Assembled : Shape(a+b+c) > Shape(d).⚠️")
             has_error = True
-      
+
+    elif program == "News_Dealer":
+        data_array= np.zeros(15, dtype=object)
+        data_array[0] = st.sidebar.number_input("Number of Days ", min_value=1, value=5)
+        if data_array[0] < 1:
+            st.error("The number of simulations must be a positive integer.⚠️")
+            has_error = True
+        col1, col2 = st.sidebar.columns(2)
+        with col1:data_array[1] = st.number_input("Min Demand (units)", min_value=1, value=40)
+        with col2:data_array[2] = st.number_input("Max Demand (units)", min_value=1, value=100)
+        if data_array[1] >= data_array[2]:
+            st.error("The daily demand range must be valid (start must be less than end)⚠️.")
+            has_error = True
+        if data_array[1]%10 != 0 :
+            st.error(f"The demand must be valid (+10) not accept {data_array[1]}⚠️.")
+            has_error = True
+        if  data_array[2]%10 != 0:
+            st.error(f"The demand must be valid (+10) not accept {data_array[2]}⚠️.")
+            has_error = True            
+        EqualProbabilities_demand = st.sidebar.checkbox("Use Equal Probabilities", value=False)
+        data_array[3] = EqualProbabilities_demand
+        if not EqualProbabilities_demand:
+            data_array[4] =  st.sidebar.text_input("Good News Probabilities (space-separated)", "0.03 0.05 0.15 0.20 0.35 0.15 0.07")
+            data_array[5] =  st.sidebar.text_input("Fair News Probabilities (space-separated)", "0.10 0.18 0.40 0.20 0.08 0.04 0.00")
+            data_array[6] =  st.sidebar.text_input("Poor News Probabilities (space-separated)", "0.44 0.22 0.16 0.12 0.06 0.00 0.00")
+            data_array[7] =  st.sidebar.text_input("Newsday Probabilities (G-F-P) (space-separated)", "0.35 0.45 0.20")
+            prob_good = list(map(float,data_array[4].split()))
+            prob_fair = list(map(float,data_array[5].split()))
+            prob_poor = list(map(float,data_array[6].split()))
+            prob_newstype = list(map(float,data_array[7].split()))
+
+            if abs(sum(prob_good) - 1) > 0.01:
+                st.error("The sum of good probabilities must equal 1.⚠️")
+                has_error = True
+            if abs(sum(prob_fair) - 1) > 0.01:
+                st.error("The sum of fair probabilities must equal 1.⚠️")
+                has_error = True
+            if abs(sum(prob_poor) - 1) > 0.01:
+                st.error("The sum of poor probabilities must equal 1.⚠️")
+                has_error = True
+            if abs(sum(prob_newstype) - 1) > 0.01:
+                st.error("The sum of news type probabilities must equal 1.⚠️")
+                has_error = True
+            if not prob_fair or not prob_good or not prob_poor or not prob_newstype:
+                st.error("Probabilities must be entered when equal probability is disabled.⚠️")
+                has_error = True
+            if len(prob_fair) > (((data_array[2]-data_array[1])/10)+1):
+                st.error("Probabilities must be entered equal to fair Demand probability length.⚠️")
+                has_error = True
+            if len(prob_poor) >(((data_array[2]-data_array[1])/10)+1):
+                st.error("Probabilities must be entered equal to poor Demand probability length.⚠️")
+                has_error = True
+            if len(prob_good)>(((data_array[2]-data_array[1])/10)+1):
+                st.error("Probabilities must be entered equal to good Demand probability length.⚠️")
+                has_error = True
+            if len(prob_newstype) != 3:
+                st.error("Probabilities must be entered equal 3 to news type probability length.⚠️")
+                has_error = True
+        Auto_generate = st.sidebar.checkbox("Auto-generate Random Numbers", value=False)
+        data_array[10] = Auto_generate
+        if not Auto_generate:
+            data_array[8] = st.sidebar.text_input("Demand Random Numbers (space-separated)", "80 20 15 88 98")
+            data_array[9] = st.sidebar.text_input("Type Newsday Random Numbers (space-separated)","94 77 49 45 43" )
+            rand_values_Demand = list(map(int,data_array[8].split()))
+            rand_values_Newsday = list(map(int,data_array[9].split()))
+            if not rand_values_Demand or not rand_values_Newsday:
+                st.error("Random numbers must be entered when auto randoms are disabled.")
+                has_error = True   
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("### 💰 Dealer Settings")  
+        col1, col2 = st.sidebar.columns(2)
+        with col1:data_array[11] = st.number_input("Buy (cent)", min_value=1.0, value=33.0)
+        with col2:data_array[12] = st.number_input("Sell (cent)", min_value=1.0, value=50.0)
+        data_array[13] = st.sidebar.number_input("Sell Scrap (cent)", min_value=1.0, value=5.0)
+        data_array[14] = st.sidebar.number_input("News stand capacity", min_value=1, value=70)
+        if data_array[12] <= data_array[11] :
+            st.error("The Buy cost must be valid (you will lose money)⚠️.")
+            has_error = True
+   
+   
     else:
         st.error("Invalid program selected.")
         has_error = True
@@ -440,6 +519,22 @@ def data_labeled():
         D_ratio = st.session_state.input_data_array[8]
         Auto_rand = st.session_state.input_data_array[10]
         rand_values = st.session_state.input_data_array[9]
+    elif program == "News_Dealer":
+        days = st.session_state.input_data_array[0]
+        Demand_min = st.session_state.input_data_array[1]
+        Demand_max = st.session_state.input_data_array[2]
+        EqualProbabilities_demand = st.session_state.input_data_array[3]
+        prob_good = st.session_state.input_data_array[4]
+        prob_fair = st.session_state.input_data_array[5]
+        prob_poor = st.session_state.input_data_array[6]
+        prob_newstype = st.session_state.input_data_array[7]
+        Auto_generate = st.session_state.input_data_array[10]
+        rand_values_Demand = st.session_state.input_data_array[8]
+        rand_values_Newsday = st.session_state.input_data_array[9]
+        Buy_cost = st.session_state.input_data_array[11]
+        Sell_cost = st.session_state.input_data_array[12]
+        Sell_Scrap = st.session_state.input_data_array[13]
+        News_stand_capacity = st.session_state.input_data_array[14]
 
 
 def RandomNum(MaxNumRange):
@@ -758,6 +853,109 @@ def ProbabilityTable(program):
                 df_Assembly = pd.DataFrame(rows, columns=headers)
                 st.subheader("📦 Assembly Parts Table")
                 st.dataframe(df_Assembly)   
+            elif program == "News_Dealer":
+
+
+                Demand_min = st.session_state.input_data_array[1]
+                Demand_max = st.session_state.input_data_array[2]
+                EqualProbabilities_demand = st.session_state.input_data_array[3]
+                prob_good = st.session_state.input_data_array[4]
+                prob_fair = st.session_state.input_data_array[5]
+                prob_poor = st.session_state.input_data_array[6]
+                prob_newstype = st.session_state.input_data_array[7]
+
+
+                headers = ["Demand", "Probability", "Cumulative", "Start Range", "End Range"] 
+                header_newstype = ["Type", "Probability", "Cumulative", "Start Range", "End Range"] 
+                if not EqualProbabilities_demand:
+                    ProbValuesDemandGood = GetProbabilities(prob_good)
+                    ProbValuesDemandFair = GetProbabilities(prob_fair)
+                    ProbValuesDemandPoor = GetProbabilities(prob_poor)
+                    ProbValuesTypeNews = GetProbabilities(prob_newstype)
+
+                else: 
+                    ProbValuesDemandGood = ProbValuesDemandFair = ProbValuesDemandPoor = ProbValuesTypeNews = None
+
+                ProbArryDemandGood = CalculateProbability(int(Demand_min/10), int(Demand_max/10), EqualProbabilities_demand, ProbValuesDemandGood)
+                ProbArryDemandFair = CalculateProbability(int(Demand_min/10), int(Demand_max/10), EqualProbabilities_demand, ProbValuesDemandFair)
+                ProbArryDemandPoor = CalculateProbability(int(Demand_min/10), int(Demand_max/10), EqualProbabilities_demand, ProbValuesDemandPoor)
+                ProbArryTypeNews = CalculateProbability(0, 2, EqualProbabilities_demand, ProbValuesTypeNews)
+                ProbArryTypeNews = ProbArryTypeNews.astype(object) 
+                for i in range(int(( Demand_max - Demand_min )/10) + 1):
+                    ProbArryDemandGood[i,0]= int(ProbArryDemandGood[i,0]*10)
+                    ProbArryDemandFair[i,0]= int(ProbArryDemandFair[i,0]*10)
+                    ProbArryDemandPoor[i,0]= int(ProbArryDemandPoor[i,0]*10)
+                    if ProbArryDemandFair[i, 3] == 100 :
+                        ProbArryDemandFair[i, 3]=0
+                        ProbArryDemandFair[i, 2]=0
+                        ProbArryDemandFair[i, 4]=0
+                    if ProbArryDemandGood[i, 3] == 100 :
+                        ProbArryDemandGood[i, 3]=0
+                        ProbArryDemandGood[i, 2]=0
+                        ProbArryDemandGood[i, 4]=0
+                    if ProbArryDemandPoor[i, 3] == 100 :
+                        ProbArryDemandPoor[i, 3]=0
+                        ProbArryDemandPoor[i, 2]=0
+                        ProbArryDemandPoor[i, 4]=0
+                for i in range(3):
+                    if i==0:
+                        ProbArryTypeNews[i, 0] = "Good"
+                    elif i==1:
+                        ProbArryTypeNews[i, 0] = "Fair"
+                    elif i==2:
+                        ProbArryTypeNews[i, 0] = "Poor"
+  
+
+                # Convert to DataFrames
+                df_Demand_Good = pd.DataFrame(ProbArryDemandGood, columns=headers)
+                df_Demand_Fair = pd.DataFrame(ProbArryDemandFair, columns=headers)
+                df_Demand_Poor = pd.DataFrame(ProbArryDemandPoor, columns=headers)
+                df_Type_News = pd.DataFrame(ProbArryTypeNews, columns=header_newstype)
+
+                df_Demand_Good["Demand"] = df_Demand_Good["Demand"].astype(int)
+                df_Demand_Good["Start Range"] = df_Demand_Good["Start Range"].astype(int)
+                df_Demand_Good["End Range"] = df_Demand_Good["End Range"].astype(int)
+                df_Demand_Good["Probability"] = df_Demand_Good["Probability"].map("{:.2f}".format)
+                df_Demand_Good["Cumulative"] = df_Demand_Good["Cumulative"].map("{:.2f}".format)
+
+                df_Demand_Fair ["Demand"] = df_Demand_Fair ["Demand"].astype(int)
+                df_Demand_Fair ["Start Range"] = df_Demand_Fair ["Start Range"].astype(int)
+                df_Demand_Fair ["End Range"] = df_Demand_Fair ["End Range"].astype(int)
+                df_Demand_Fair ["Probability"] = df_Demand_Fair ["Probability"].map("{:.2f}".format)
+                df_Demand_Fair ["Cumulative"] = df_Demand_Fair ["Cumulative"].map("{:.2f}".format)
+
+                df_Demand_Poor["Demand"] = df_Demand_Poor["Demand"].astype(int)
+                df_Demand_Poor["Start Range"] = df_Demand_Poor["Start Range"].astype(int)
+                df_Demand_Poor["End Range"] = df_Demand_Poor["End Range"].astype(int)
+                df_Demand_Poor["Probability"] = df_Demand_Poor["Probability"].map("{:.2f}".format)
+                df_Demand_Poor["Cumulative"] = df_Demand_Poor["Cumulative"].map("{:.2f}".format)
+
+                df_Type_News["Type"] = df_Type_News["Type"]
+                df_Type_News["Start Range"] = df_Type_News["Start Range"].astype(int)
+                df_Type_News["End Range"] = df_Type_News["End Range"].astype(int)
+                df_Type_News["Probability"] = df_Type_News["Probability"].map("{:.2f}".format)
+                df_Type_News["Cumulative"] = df_Type_News["Cumulative"].map("{:.2f}".format)
+   
+                st.session_state.Demand_Good = df_Demand_Good
+                st.session_state.Demand_Fair = df_Demand_Fair
+                st.session_state.Demand_Poor = df_Demand_Poor
+                st.session_state.Type_News = df_Type_News
+
+                st.subheader("🤗 Demand Good Probability ")
+                st.dataframe(df_Demand_Good)
+                st.markdown("-----")
+
+                st.subheader("🙂 Demand Fair Probability ")
+                st.dataframe(df_Demand_Fair) 
+                st.markdown("-----")
+
+                st.subheader("☹️ Demand Poor Probability ")
+                st.dataframe(df_Demand_Poor)
+                st.markdown("-----")
+
+                st.subheader("♨️ News type Probability ")
+                st.dataframe(df_Type_News)
+
             else:
                 st.error("Invalid program selected.")                
         except Exception as e:
@@ -1514,6 +1712,75 @@ def TableData(program):
             st.session_state.TotalWhosWaitInQueue = TotalWhosWaitInQueue
             st.session_state.program_type = "Hinge_Assembly"
             return TableArry, TotalWhosWaitInQueue,"Hinge_Assembly"                    
+        elif program =="News_Dealer":
+
+            good_table = st.session_state.get("Demand_Good")
+            fair_table = st.session_state.get("Demand_Fair")
+            poor_table = st.session_state.get("Demand_Poor")
+            news_table = st.session_state.get("Type_News")
+
+            days = st.session_state.input_data_array[0]
+
+            Auto_generate = st.session_state.input_data_array[10]
+            rand_Demand = st.session_state.input_data_array[8]
+            rand_Newsday = st.session_state.input_data_array[9]
+            Buy_cost = st.session_state.input_data_array[11]
+            Sell_cost = st.session_state.input_data_array[12]
+            Sell_Scrap = st.session_state.input_data_array[13]
+            News_stand_capacity = st.session_state.input_data_array[14]
+
+            Daily_profit = News_stand_capacity * Buy_cost /100
+            Row_profit = Sell_cost- Buy_cost
+
+            if not Auto_generate:
+                rand_values_Demand = list(map(int,rand_Demand.split()))
+                rand_values_Newsday = list(map(int,rand_Newsday.split()))
+            else:
+                rand_values_Demand = None
+                rand_values_Newsday = None
+
+            def CalRandomTime_spacific(RandNum,CheckArry):
+                for i in range(len(CheckArry)):
+                    if (CheckArry[i, 4] >= RandNum) and (CheckArry[i, 3] <= RandNum): 
+                        return CheckArry[i, 0]
+
+            TableArry = np.zeros((days+1, 9), dtype=object)
+
+            for i in range(days):
+                TableArry[i,0] = i + 1
+                if Auto_generate:
+                    TableArry[i,1] = RandomNum(99)
+                    TableArry[i,3] = RandomNum(99)
+                else:
+                    rand_len = len(rand_values_Demand)
+                    TableArry[i,1] = rand_values_Demand[i] if i < rand_len else rand_values_Demand[i % rand_len]
+                    TableArry[i,3] = rand_values_Newsday[i] if i < rand_len else rand_values_Newsday[i % rand_len]
+                TableArry[i,2] =  CalRandomTime_spacific(TableArry[i,1],news_table.to_numpy()) 
+                if TableArry[i,2] == "Good" :
+                    TableArry[i,4] =  CalRandomTime_spacific(TableArry[i,3],good_table.to_numpy())
+                elif TableArry[i,2] == "Fair" :
+                    TableArry[i,4] =  CalRandomTime_spacific(TableArry[i,3],fair_table.to_numpy())
+                elif TableArry[i,2] == "Poor" :
+                    TableArry[i,4] =  CalRandomTime_spacific(TableArry[i,3],poor_table.to_numpy())
+                else:
+                    st.error("Invalid type.")
+                if TableArry[i,4] <= News_stand_capacity:
+                    TableArry[i,5] = TableArry[i,4] * Sell_cost/100
+                else:
+                    TableArry[i,5] = News_stand_capacity * Sell_cost/100
+                if TableArry[i,4] < News_stand_capacity:
+                    TableArry[i,7] = (News_stand_capacity  - TableArry[i,4]) * Sell_Scrap/100
+                if TableArry[i,4] > News_stand_capacity:
+                    TableArry[i,6] = (TableArry[i,4] - News_stand_capacity) * Row_profit/100
+                
+                TableArry[i,8] = TableArry[i,5] - TableArry[i,6] + TableArry[i,7] - Daily_profit
+
+            TableArry[days] = np.sum(TableArry[:days], axis=0)
+            TotalWhosWaitInQueue = 0
+            st.session_state.output_data_Table = TableArry
+            st.session_state.TotalWhosWaitInQueue = TotalWhosWaitInQueue
+            st.session_state.program_type = "News_Dealer"
+            return TableArry, TotalWhosWaitInQueue,"News_Dealer"   
         else:
             st.error("Invalid program selected.")
     except Exception as e:
@@ -1708,8 +1975,75 @@ def TablePrinter():
                 styled_table = df_table.style.apply(highlight_sine_column, axis=1)
 
                 st.markdown("### 🗃️ TABLE DATA:")
-                #st.dataframe(df_table, use_container_width=True)
                 st.dataframe(styled_table, use_container_width=True)
+            elif st.session_state.program_type == "News_Dealer":
+                table_data = st.session_state.output_data_Table
+
+                df_table = pd.DataFrame(table_data[:-1], columns=[
+                    "Day", "R-type", "type", "R-Demand", "Demand",
+                    "Revenue($)", "Lost Profit($)", "Scrap Price($)", "Daily profit($)"
+                ])
+
+                df_table["Daily profit($)"] = pd.to_numeric(df_table["Daily profit($)"], errors='coerce')
+
+                def highlight_sine_column(row):
+                    profit = row["Daily profit($)"]
+                    if profit < 0:
+                        color = 'background-color:#a20909'
+                    elif profit > 0:
+                        color = 'background-color: #0c901c'
+                    else:
+                        color = 'background-color: #08154d'
+                    return [color if col == "Daily profit($)" else '' for col in row.index]
+
+                styled_table = df_table.style.apply(highlight_sine_column, axis=1).format({
+                    "Daily profit($)": "{:.2f}",
+                    "Revenue($)": "{:.2f}",
+                    "Lost Profit($)": "{:.2f}",
+                    "Scrap Price($)": "{:.2f}"
+                })
+
+       
+                st.markdown("### 🗃️ TABLE DATA:")
+                st.dataframe(styled_table, use_container_width=True)
+
+                total_row = {
+                    "Day": table_data[-2, 0],
+                    "R-type": "",
+                    "type": "",
+                    "R-Demand": "",
+                    "Demand": "",
+                    "Revenue($)": float(table_data[-1, 5]),
+                    "Lost Profit($)": float(table_data[-1, 6]),
+                    "Scrap Price($)": float(table_data[-1, 7]),
+                    "Daily profit($)": float(table_data[-1, 8])
+                }
+
+                def highlight_total_profit_cell(val):
+                    try:
+                        val = float(val)
+                        if val > 0:
+                            return 'background-color: #0c901c; color: white'  # أخضر
+                        elif val < 0:
+                            return 'background-color: #a20909; color: white'  # أحمر
+                        else:
+                            return 'background-color: #08154d; color: white'  # أزرق غامق
+                    except:
+                        return ''
+
+                df_total = pd.DataFrame([total_row])
+
+                styled_total = df_total.style.format({
+                    "Revenue($)": "{:.2f}",
+                    "Lost Profit($)": "{:.2f}",
+                    "Scrap Price($)": "{:.2f}",
+                    "Daily profit($)": "{:.2f}"
+                }).applymap(highlight_total_profit_cell, subset=["Daily profit($)"])
+
+                st.markdown("-----")
+                st.markdown("### 📑 TOTAL DATA:")
+                st.dataframe(styled_total, use_container_width=True)
+
             else:
                 st.error("Invalid program selected.")
         except Exception as e:
@@ -1828,8 +2162,29 @@ def Statistics(program):
             }
             df = pd.DataFrame(data, columns=["Statistic", "Value"])
             st.dataframe(df)
-
-
+        elif program_type =="News_Dealer":
+            TableArry = st.session_state.output_data_Table
+            days = st.session_state.input_data_array[0]
+            SumRevenue = TableArry[days-1, 5]
+            SumLostProfit = TableArry[days-1, 6]
+            SumScrapPrice = TableArry[days-1, 7]
+            SumDailyProfit = TableArry[days-1, 8]
+            data = {
+                "Statistic": [
+                    "Average Revenue ($)",
+                    "Average Lost Profit ($)",
+                    "Average Scrap Price ($)",
+                    "Average Daily Profit ($)"
+                ],
+                "Value": [
+                    round( SumRevenue / days,2) if days != 0 else 0.00,
+                    round( SumLostProfit / days,2) if days != 0 else 0.00,
+                    round( SumScrapPrice / days,2) if days != 0 else 0.00,
+                    round( SumDailyProfit / days,2) if days != 0 else 0.00
+                ]
+            }
+            df = pd.DataFrame(data, columns=["Statistic", "Value"])
+            st.dataframe(df)
     except Exception as e:
         st.error(f"An error occurred while calculating statistics: {e}")
 
@@ -2283,7 +2638,109 @@ def Graphics(program_type):
 
         except Exception as e:
             st.error(f"An error occurred while generating graphics: {e}")
+    elif program_type == "News_Dealer":
+        try:
+            st.subheader("📊 News Dealer Analysis")
+            TableArry = st.session_state.output_data_Table
+            days = st.session_state.input_data_array[0]
+            lost = TableArry[:days, 6]
+            revenue = TableArry[:days, 5]
+            Demand = TableArry[:days, 4]
+            scrap = TableArry[:days, 7]
+            profit = TableArry[:days, 8]
 
+            total_revenue = TableArry[:days, 5].sum()
+            total_lost = TableArry[:days, 6].sum()
+            total_scrap = TableArry[:days, 7].sum()
+            total_prof = TableArry[:days, 8].sum()
+            total_profit = round(total_prof, 2)
+            Buy_cost = st.session_state.input_data_array[11]
+            Sell_cost = st.session_state.input_data_array[12]
+            Sell_Scrap = st.session_state.input_data_array[13]
+            News_stand_capacity = st.session_state.input_data_array[14]
+
+            Daily_profit = News_stand_capacity * Buy_cost /100
+            Row_profit = Sell_cost- Buy_cost
+            hamada = ""
+            if total_profit > 0 :
+                hamada = "win 🎉"
+            elif total_profit < 0:
+                hamada = "lose 💔"
+            else:
+                hamada = "draw 🙄"
+
+            st.title("You Are : "+ hamada+" : "+ str(total_profit) + "$")
+            st.markdown("-----")
+            col1 , col2 = st.columns(2)
+            col1.metric("Total Revenue", total_revenue)
+            col2.metric("Total Lost", total_lost)
+            col3 , col4 = st.columns(2)
+            col3.metric("Total Scrap", total_scrap)
+            col4.metric("Total Profit", total_profit)
+            col5 , col6 = st.columns(2)
+            col5.metric("Daily Profit", Daily_profit)
+            col6.metric("Row Profit", Row_profit)
+        
+            
+            fig8, ax8 = plt.subplots()
+            ax8.plot(lost, label="Lost", marker='o', color='blue')
+            ax8.plot(revenue, label="Revenue", marker='x', color='orange')
+            ax8.plot(scrap, label="Scrap", marker='x', color='green')
+            ax8.plot(profit, label="Profit", marker='o', color='purple')
+            ax8.set_title("Lost vs. Revenue vs. Scrap vs. Profit")
+            ax8.set_xlabel("Days")
+            ax8.set_ylabel("Demand")
+            ax8.legend()
+            ax8.grid(True, linestyle="-", alpha=0.9)
+            st.pyplot(fig8)
+
+            fig8, ax8 = plt.subplots()
+            ax8.plot(lost, label="Lost", marker='o', color='blue')
+            ax8.plot(profit, label="Profit", marker='x', color='purple')
+            ax8.set_title("Lost vs. Profit")
+            ax8.set_xlabel("Days")
+            ax8.set_ylabel("Units")
+            ax8.legend()
+            ax8.grid(True, linestyle="-", alpha=0.9)
+            st.pyplot(fig8)
+
+                        
+            fig8, ax8 = plt.subplots()
+            ax8.plot(revenue, label="Revenue", marker='x', color='orange')
+            ax8.plot(Demand, label="Demand", marker='o', color='red')
+            ax8.plot(scrap, label="Scrap", marker='x', color='green')
+            ax8.set_title("Demand vs. revenue vs. Scrap")
+            ax8.set_xlabel("Days")
+            ax8.set_ylabel("Units")
+            ax8.legend()
+            ax8.grid(True, linestyle="-", alpha=0.9)
+            st.pyplot(fig8)      
+
+            fig8, ax8 = plt.subplots()
+            ax8.plot(lost, label="Lost", marker='o', color='blue')
+            ax8.plot(scrap, label="Scrap", marker='x', color='green')
+            ax8.plot(profit, label="Profit", marker='o', color='purple')
+            ax8.set_title("Lost  vs.  Scrap vs. Profit")
+            ax8.set_xlabel("Days")
+            ax8.set_ylabel("Units")
+            ax8.legend()
+            ax8.grid(True, linestyle="-", alpha=0.9)
+            st.pyplot(fig8)
+
+      
+            fig8, ax8 = plt.subplots()
+            ax8.plot(scrap, label="Scrap", marker='x', color='green')    
+            ax8.plot(profit, label="Profit", marker='o', color='purple')
+            ax8.plot(Demand, label="Demand", marker='o', color='red')
+            ax8.set_title("scrap vs. Profit vs. Demand")
+            ax8.set_xlabel("Days")
+            ax8.set_ylabel("Units")
+            ax8.legend()
+            ax8.grid(True, linestyle="-", alpha=0.9)
+            st.pyplot(fig8)      
+
+        except Exception as e:
+            st.error(f"An error occurred while generating graphics: {e}")
     else:
         st.error("Invalid program type for graphics generation. Please check the program type.")
 
@@ -2525,6 +2982,20 @@ def DownloadData(program):
                 file_name="simulation_data.csv",
                 mime="text/csv"
             )
+        elif program == "News_Dealer":
+            st.subheader("⬇️ Download All Simulation Data")
+            TableArry = st.session_state.output_data_Table
+            df_simulation = pd.DataFrame(TableArry, columns=["Day","R-type","type","R-Demand","demand","Revenue","lost profit","scrap","daily profit"])
+            
+            # Convert to CSV format
+            csv = df_simulation.to_csv(index=False).encode('utf-8')
+            # Create a download button
+            st.download_button(
+                label="Download Data as CSV",
+                data=csv,
+                file_name="simulation_data.csv",
+                mime="text/csv"
+            )
         else:
             st.error("Invalid program type for download data generation. Please check the program type.")
     except Exception as e:
@@ -2564,14 +3035,14 @@ if st.session_state.page == "main":
     st.markdown("#### 🏓 Game Modules:")    
     col1, col2 = st.columns(2)
     with col1:
-        st.button("💰 Gambing Game", on_click=lambda: go_to("Gambing_Game"))
+        st.button("💰 Gambling Game", on_click=lambda: go_to("Gambing_Game"))
     with col2:
         st.button("🧩 A Hinge Assembly", on_click=lambda: go_to("Hinge_Assembly"))  
     st.markdown("---")    
     st.markdown("#### 🗞️ Dealer Modules:")    
     col1, col2 = st.columns(2)
     with col1:
-        st.button("📰 News Dealer's", on_click=lambda: go_to(""),disabled=True)      
+        st.button("📰 News Dealer's", on_click=lambda: go_to("News_Dealer"))      
     st.markdown("---")
     with st.expander("ℹ️ About the App", expanded=False):
         st.markdown(
@@ -2716,7 +3187,7 @@ elif st.session_state.page == "Inventory_Cycle_Management":
 
 elif st.session_state.page == "Gambing_Game":
     visibility = True
-    st.title("💰 Gambing Game")
+    st.title("💰 Gambling Game")
     st.markdown(
         """
         **Manage and simulate gambling scenarios to monitor stock levels, optimize reordering,
@@ -2771,6 +3242,38 @@ elif st.session_state.page == "Hinge_Assembly":
             Graphics("Hinge_Assembly")
         with tab4:
             DownloadData("Gambing_Game")
+
+elif st.session_state.page == "News_Dealer":
+    visibility = True
+    st.title("📰 News Dealer's")
+    st.markdown(
+        """
+        **Experience news dealer's like never before simulate real-time scenarios to evaluate efficiency,
+        track component usage, and achieve successful builds.**
+
+        This simulation module is designed to reflect real-world assembly challenges, helping you make 
+        smarter decisions in production, planning, and process optimization.
+        """   )
+    st.sidebar.title(" 👨🏻‍🔧 Settings")
+    data_array, has_error = inputs("News_Dealer")
+    st.session_state.input_data_array = data_array
+    simulate_btn = st.sidebar.button("Run Simulation 📊", on_click=lambda:(simulate_btn==True), disabled=has_error)
+    st.sidebar.button("🔙 Back" ,on_click=lambda:go_to("main"))
+
+    if simulate_btn:
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(["💡 Probabilities", "📈 Analysis", "📄 Data Report", "📊 Graphics", "⬇️ Download"])
+        with tab1:
+            ProbabilityTable("News_Dealer")  
+        with tab2:
+            table_data, TotalWhosWaitInQueue ,program_type  = TableData("News_Dealer")
+            TablePrinter()
+        with tab3:  
+            Statistics("News_Dealer")
+        with tab4:
+            Graphics("News_Dealer")
+        with tab5:
+            DownloadData("News_Dealer")
+
 st.markdown(
     """
     <footer style='text-align: center; margin-top: 50px;'>
@@ -2780,3 +3283,4 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+      
