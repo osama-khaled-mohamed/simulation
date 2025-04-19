@@ -2038,7 +2038,7 @@ def TablePrinter():
                     "Lost Profit($)": "{:.2f}",
                     "Scrap Price($)": "{:.2f}",
                     "Daily profit($)": "{:.2f}"
-                }).applymap(highlight_total_profit_cell, subset=["Daily profit($)"])
+                }).map(highlight_total_profit_cell, subset=["Daily profit($)"])
 
                 st.markdown("-----")
                 st.markdown("### 📑 TOTAL DATA:")
